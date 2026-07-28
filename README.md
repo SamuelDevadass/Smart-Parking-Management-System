@@ -9,6 +9,10 @@
 
 FULLSTACK WEB APPLICATION WITH FULLY FUNCTIONAL DATABASE AND AUTOMATIC PLATE DETECTION
 
+### ARCHITECTURE DIAGRAM
+
+![Architecture Diagram](ARCHITECTURE.png)
+
 ## Video Walkthrough
 
 [![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/7mYoQlRec2c)](https://youtu.be/7mYoQlRec2c)
