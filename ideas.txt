@@ -1,0 +1,42 @@
+lets keep the select wing as it is
+
+lets add a new login page after the select wing page
+
+maybe review the frontend variables and remove any computation move to the api layer to be defined in go
+
+for go routers / handlers convert the following to equivalent go huma handlers
+use the pgx library driver of go with pgsql
+# ---------------------------------------------------------------------------
+# Wings
+# ---------------------------------------------------------------------------
+app.include_router(wings.router)
+
+# ---------------------------------------------------------------------------
+# Spot availability
+# ---------------------------------------------------------------------------
+app.include_router(spots.router)
+
+# ---------------------------------------------------------------------------
+# Detection
+# ---------------------------------------------------------------------------
+app.include_router(detection.router)
+
+# ---------------------------------------------------------------------------
+# Vehicles / owners & Entry / exit
+# ---------------------------------------------------------------------------
+app.include_router(vehicles_entry_exit.router)
+
+# ---------------------------------------------------------------------------
+# Billing
+# ---------------------------------------------------------------------------
+app.include_router(bills.router)
+
+add an authentication middleware
+
+build the grpc bridge for go huma to push requests to fastapi uvicorn
+    requires learning protobuff and grpc 
+
+Frontend deploy to vercel
+API and Python OCR go to Render Railway 
+
+Need proper justification for each chosen tool

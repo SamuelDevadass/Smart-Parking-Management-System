@@ -11,7 +11,8 @@ FULLSTACK WEB APPLICATION WITH FULLY FUNCTIONAL DATABASE AND AUTOMATIC PLATE DET
 
 ### ARCHITECTURE DIAGRAM
 
-![Architecture Diagram](ARCHITECTURE.png)
+<img width="982" height="457" alt="image" src="https://github.com/user-attachments/assets/abb04c1d-6a95-4990-8ac3-594ddbcd18b9" />
+
 
 ## Video Walkthrough
 
