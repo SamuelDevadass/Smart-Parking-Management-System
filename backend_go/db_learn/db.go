@@ -64,7 +64,7 @@ func main() {
 	id, num, data = read_from_db(ctx, db)
 	fmt.Printf("Received values (%v,%v,%v)", id, num, data)
 
-	/*log.Println("\nAttempting to fetch multiple rows")
+	log.Println("\nAttempting to fetch multiple rows")
 
 	var values []TestGo
 	values, err = read_multiple_from_db(ctx, db)
@@ -75,7 +75,7 @@ func main() {
 		for _, val := range values {
 			fmt.Println("Tuple Received\t: ", val)
 		}
-	}*/
+	}
 
 }
 
@@ -103,7 +103,7 @@ func read_from_db(ctx context.Context, db *pgxpool.Pool) (int, int, string) {
 	return id, num, data
 }
 
-/*func read_multiple_from_db(ctx context.Context, db *pgxpool.Pool) ([]TestGo, error) {
+func read_multiple_from_db(ctx context.Context, db *pgxpool.Pool) ([]TestGo, error) {
 	rows, err := db.Query(ctx, `SELECT * FROM test_go ORDER BY id`)
 	if err != nil {
 		log.Fatalf("Error fetching all")
@@ -123,4 +123,4 @@ func read_from_db(ctx context.Context, db *pgxpool.Pool) (int, int, string) {
 		return nil, err
 	}
 	return results, nil
-}*/
+}
