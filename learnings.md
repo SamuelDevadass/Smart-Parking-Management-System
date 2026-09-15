@@ -30,3 +30,23 @@ If msg is Hello, Gladys, printing it with %v gives: Hello, Gladys
 
 Printing it with %q gives: "Hello, Gladys"
 Also, test functions take a pointer to the testing package's testing.T type as a parameter. You use this parameter's methods for reporting and logging from your test.
+
+15-09-2026
+
+While creating a go file, if its a standalone file that must run by itself or is the main entry point it must have the line package main
+
+the main func is the main entry exit point of that file
+
+use the joho/godotenv to to use .env files or os.Getenv if loading directly from OS
+
+run go mod init to create the go.mod file 
+after writing, run go mod tidy to update the mod file
+to compile :
+1) run go build -o executable_name code_file.go
+run ./executable_name.exe or just ./executable_name
+2) run go build
+this creates an executable of name same as the direectory 
+run ./executable_name.exe or just executable_name
+the go env looks for 1st @ so if pw contains @ write as %40 alwys use the codes for the special characters in the passwords
+
+
