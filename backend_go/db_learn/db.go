@@ -30,7 +30,7 @@ func main() {
 	defer db.Close()
 	fmt.Println("CONNECTION POOL READY")
 
-	_, err = db.Exec(ctx, `CREATE TABLE IF NOT EXISTS test_go(
+	/*_, err = db.Exec(ctx, `CREATE TABLE IF NOT EXISTS test_go(
 							id serial PRIMARY KEY,
 							num INTEGER,
 							data TEXT)`)
@@ -45,8 +45,8 @@ func main() {
 		fmt.Println("INSERTED INTO TABLE")
 	} else {
 		fmt.Println("ERROR INSERTING")
-	}
-	/*nums := []int{456, 789, 147}
+	}*/
+	nums := []int{456, 789, 147}
 	dats := []string{"ABC", "DEF", "GHI"}
 	for index, num := range nums {
 		log.Printf("Adding value %v:%v", num, dats[index])
@@ -57,7 +57,7 @@ func main() {
 			log.Fatalf("Error inserting at index %v", index)
 		}
 
-	}*/
+	}
 	/*log.Println("Attempting to fetch 1 row")
 	var id, num int
 	var data string
