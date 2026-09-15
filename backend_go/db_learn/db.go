@@ -46,7 +46,7 @@ func main() {
 	} else {
 		fmt.Println("ERROR INSERTING")
 	}*/
-	nums := []int{456, 789, 147}
+	/*nums := []int{456, 789, 147}
 	dats := []string{"ABC", "DEF", "GHI"}
 	for index, num := range nums {
 		log.Printf("Adding value %v:%v", num, dats[index])
@@ -57,12 +57,12 @@ func main() {
 			log.Fatalf("Error inserting at index %v", index)
 		}
 
-	}
-	/*log.Println("Attempting to fetch 1 row")
+	}*/
+	log.Println("Attempting to fetch 1 row")
 	var id, num int
 	var data string
 	id, num, data = read_from_db(ctx, db)
-	fmt.Printf("Received values (%v,%v,%v)", id, num, data)*/
+	fmt.Printf("Received values (%v,%v,%v)", id, num, data)
 
 	/*log.Println("\nAttempting to fetch multiple rows")
 
@@ -91,7 +91,7 @@ func insert_into_table(ctx context.Context, db *pgxpool.Pool,
 
 }
 
-/*func read_from_db(ctx context.Context, db *pgxpool.Pool) (int, int, string) {
+func read_from_db(ctx context.Context, db *pgxpool.Pool) (int, int, string) {
 	var id, num int
 	var data string
 	err := db.QueryRow(ctx, `SELECT id, num, data FROM test_go
@@ -101,7 +101,7 @@ func insert_into_table(ctx context.Context, db *pgxpool.Pool,
 	}
 	fmt.Println("fetched 1 row")
 	return id, num, data
-}*/
+}
 
 /*func read_multiple_from_db(ctx context.Context, db *pgxpool.Pool) ([]TestGo, error) {
 	rows, err := db.Query(ctx, `SELECT * FROM test_go ORDER BY id`)
