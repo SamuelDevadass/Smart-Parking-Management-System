@@ -1,4 +1,4 @@
-module github.com/SamuelDevadass/Smart-Parking-Management-System.com
+module api.com
 
 go 1.27.1
 

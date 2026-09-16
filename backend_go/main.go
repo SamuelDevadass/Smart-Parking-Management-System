@@ -10,6 +10,8 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+
+	"api.com/handlers/wings"
 )
 
 func main() {
@@ -18,6 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load env...\nError: %v", err)
 	}
+	/*Setup the DB Connection Pool*/
 	ctx := context.Background()
 	db_url := os.Getenv("DB_URL")
 	db_pool, err := pgxpool.New(ctx, db_url)
@@ -26,22 +29,25 @@ func main() {
 	}
 	defer db_pool.Close()
 
-	//Initialize router
+	/*Initialize Network Mux*/
 	mux := http.NewServeMux()
-	//Initialize Huma API
-	config := huma.DefaultConfig("Smart Parking Management System API", "2.0.0")
-	api := humago.New(mux, config)
-	log.Println("API: ", api)
 
-	//CORS Middleware
+	/*Set up CORS Middleware*/
 	frontend_url := os.Getenv("FRONTEND_URL")
 	handler_with_CORS := enableCORS(mux, frontend_url)
-
 	port := "8000"
 	log.Println("Smart Parking Management System API running on ", os.Getenv("BACKEND_URL"))
 	if err := http.ListenAndServe(":"+port, handler_with_CORS); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
+
+	/*Initialize the API*/
+	config := huma.DefaultConfig("Smart Parking Management System API", "2.0.0")
+	api := humago.New(mux, config)
+	//log.Println("API: ", api)
+
+	/*Register Handlers*/
+	wings.RegisterHandler(api, db_pool)
 
 }
 func enableCORS(next http.Handler, allowedOrigin string) http.Handler {
