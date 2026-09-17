@@ -20,7 +20,7 @@ func Init_DB(ctx context.Context, connection_string string) {
 	fmt.Println("CONNECTION POOL READY")
 }
 
-// ----------LIST WINGS---------
+// ------------------LIST WINGS------------------------
 func ListWings(ctx context.Context) ([]string, error) {
 	var result []string
 	var value string
@@ -41,4 +41,14 @@ func ListWings(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func GetCentreForWings(ctx context.Context, wing string) (string, error) {
+	var centre string
+	err := DB.QueryRow(ctx, `SELECT centre_id FROM has_wing_floor 
+										WHERE wing = ($1)`, wing).Scan(&centre)
+	if err != nil {
+		log.Fatalf("Query row failed")
+	}
+	return centre, err
 }
