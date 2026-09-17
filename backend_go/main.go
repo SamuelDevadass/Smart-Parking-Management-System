@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"api.com/handlers/wings"
+	"api.com/repositories"
 )
 
 func main() {
@@ -23,6 +25,11 @@ func main() {
 		log.Fatalf("Failed to load env...\nError: %v", err)
 	}
 	backend_url := os.Getenv("BACKEND_URL")
+	connection_string := os.Getenv("DB_URL")
+
+	//Initialize connection to DB
+	log.Println("Initializing DB ...")
+	repositories.Init_DB(context.Background(), connection_string)
 
 	// 1. CREATE CHI ROUTER
 	r := chi.NewRouter()
@@ -31,21 +38,18 @@ func main() {
 	//CORS
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // frontend URL
+			w.Header().Set("Access-Control-Allow-Origin", "*") // frontend URL
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-
 			// Catch preflight browser tests instantly
 			if req.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
-
 			next.ServeHTTP(w, req)
 		})
 	})
-
 	// Standard chi utilities (optional but highly recommended)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)

@@ -27,7 +27,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("CANT CONNECT TO DB %v", err)
 	}
-	defer db.Close()
 	fmt.Println("CONNECTION POOL READY")
 
 	/*_, err = db.Exec(ctx, `CREATE TABLE IF NOT EXISTS test_go(
