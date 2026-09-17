@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
@@ -21,6 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load env...\nError: %v", err)
 	}
+	backend_url := os.Getenv("BACKEND_URL")
 
 	// 1. CREATE CHI ROUTER
 	r := chi.NewRouter()
@@ -29,7 +31,7 @@ func main() {
 	//CORS
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // Replace with your frontend URL
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // frontend URL
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -48,7 +50,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// 3. INITIALIZE THE API (Now wraps the fully midddleware-configured router)
+	// 3. INITIALIZE THE API
 	config := huma.DefaultConfig("Smart Parking Management System API", "2.0.0")
 	api := humachi.New(r, config)
 
@@ -56,8 +58,10 @@ func main() {
 	wings.RegisterHandler(api)
 
 	// 5. LISTEN AND SERVE
-	log.Println("🚀 Server launching on :8080...")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	log.Printf("Server running on http://%s", backend_url)
+	log.Printf("OpenAPI UI available at http://%s/docs", backend_url)
+	err = http.ListenAndServe(backend_url, r)
+	if err != nil {
 		log.Fatalf("Server crashed: %v", err)
 	}
 }

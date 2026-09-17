@@ -1,20 +1,20 @@
 package wings
 
 import (
-	"context" // Make sure context is imported
+	"context"
+	"net/http"
 
 	"api.com/models"
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // RegisterHandler registers the wings routes
-func RegisterHandler(api huma.API, db_pool *pgxpool.Pool) {
+func RegisterHandler(api huma.API) {
 
 	//Empty Route
 	huma.Register(api, huma.Operation{ /*operation is equivalent of a route*/
 		OperationID: "get-wings", /*Unique Id for OpenAPI docs*/
-		Method:      "GET",
+		Method:      http.MethodGet,
 		Path:        "/api/wings", /*path prefix*/
 	}, func(ctx context.Context, input *struct{}) (*models.WingsResponse, error) {
 		/*ctx and struct are mandatory input parameters, they can be left empty*/

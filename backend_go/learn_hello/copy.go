@@ -14,7 +14,7 @@ import (
 	"api.com/handlers/wings"
 )
 
-func main() {
+func main2() {
 	log.Println("Attempting to load env ...")
 	err := godotenv.Load("../.env")
 	if err != nil {
