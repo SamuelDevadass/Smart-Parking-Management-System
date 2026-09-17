@@ -10,12 +10,15 @@ import (
 
 // RegisterHandler registers the wings routes
 func RegisterHandler(api huma.API, db_pool *pgxpool.Pool) {
-	huma.Register(api, huma.Operation{
-		OperationID: "get-wings",
-		Method:      "GET",
-		Path:        "/wings",
-	}, func(ctx context.Context, input *struct{}) (*models.WingsResponse, error) {
 
+	//Empty Route
+	huma.Register(api, huma.Operation{ /*operation is equivalent of a route*/
+		OperationID: "get-wings", /*Unique Id for OpenAPI docs*/
+		Method:      "GET",
+		Path:        "/api/wings", /*path prefix*/
+	}, func(ctx context.Context, input *struct{}) (*models.WingsResponse, error) {
+		/*ctx and struct are mandatory input parameters, they can be left empty*/
+		/*output response is Wings.response defined in models like schema in FastAPI*/
 		// 2. Instantiate and return your named response struct
 		resp := &models.WingsResponse{}
 		resp.Body.Message = "Wings endpoint working!"
