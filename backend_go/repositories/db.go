@@ -54,7 +54,7 @@ func GetCentreForWings(ctx context.Context, wing string) (int, error) {
 	return centre, err
 }
 
-// GET SPOT AVAILABILITY
+// ------------------------------GET SPOT AVAILABILITY-------------------------------
 func GetSpotAvailability(ctx context.Context, wing string) (map[string]int, error) {
 	spots_map_dict := make(map[string]int)
 	var total_spots, free_spots int = 0, 0
@@ -90,4 +90,34 @@ func GetSpotAvailability(ctx context.Context, wing string) (map[string]int, erro
 	spots_map_dict["free_spots_four_wheeler"] = free_spots
 
 	return spots_map_dict, nil
+}
+
+// GET AVAILABLE SPOTS
+func GetAvailableSpots(ctx context.Context, wing string, centre_id int, size string) ([]map[string]string, error) {
+	var floor, spot_number, size_r string
+	var result []map[string]string
+
+	rows, err := DB.Query(ctx, `SELECT floor, spot_number, size FROM has_parking_spot
+               					WHERE centre_id = $1 AND wing = $2 AND size = $3 AND availability = True`,
+		centre_id, wing, size)
+	if err != nil {
+		log.Println("Failed to fetch data ...\n", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		single_row := make(map[string]string) //maps are passed by reference so always declare dynamically
+		if err := rows.Scan(&floor, &spot_number, &size_r); err != nil {
+			log.Println("Error while fetching free spots\n", err)
+			return nil, err
+		}
+		single_row["floor"] = floor
+		single_row["spot_number"] = spot_number
+		single_row["size"] = size_r
+		result = append(result, single_row)
+	}
+	if err := rows.Err(); err != nil {
+		log.Println("Error while fetching free spots \n", err)
+		return nil, err
+	}
+	return result, nil
 }

@@ -50,3 +50,4 @@ run ./executable_name.exe or just executable_name
 the go env looks for 1st @ so if pw contains @ write as %40 alwys use the codes for the special characters in the passwords
 
 
+In Go, maps are reference types. When you declare single_row := make(map[string]string) outside of a loop and keep appending it, you aren't adding new items—you are appending references to the exact same map. By the time the loop finishes, every single item in your list will look like the very last row fetched.
