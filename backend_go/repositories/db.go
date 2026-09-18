@@ -58,20 +58,30 @@ func GetCentreForWings(ctx context.Context, wing string) (int, error) {
 func GetSpotAvailability(ctx context.Context, wing string) (map[string]int, error) {
 	spots_map_dict := make(map[string]int)
 	var total_spots, free_spots int = 0, 0
-	err := DB.QueryRow(ctx, `SELECT COUNT(*) AS total_spots_two_wheeler,
-                        		COUNT(*) FILTER (WHERE availability = TRUE) AS free_spots_two_wheeler
+	/*err := DB.QueryRow(ctx, `SELECT COUNT(*) AS total_spots_two_wheeler,
+	                        		COUNT(*) FILTER (WHERE availability = TRUE) AS free_spots_two_wheeler
+	                        		FROM has_parking_spot WHERE wing = $1 AND size = $2`,
+			wing, "Two Wheeler").Scan(total_spots, free_spots) //order matters here: (total, free)
+			// this is dngerous because pgsql and pgx will return the type for total_spots_two_wheeler as BIG INT
+			// which disagrees with normal golang int syntax
+			Even if you dont specify a variable name in the query it will return BIG INT
+			// Typecast to int using ::int
+			// ::int should appear just before the as clause or after the entire filter is defined*/
+
+	err := DB.QueryRow(ctx, `SELECT COUNT(*)::int AS total_spots_two_wheeler,
+                        		(COUNT(*) FILTER (WHERE availability = TRUE))::int AS free_spots_two_wheeler
                         		FROM has_parking_spot WHERE wing = $1 AND size = $2`,
-		wing, "Two Wheeler").Scan(total_spots, free_spots) //order matters here: (total, free)
+		wing, "Two Wheeler").Scan(&total_spots, &free_spots)
 	if err != nil {
 		log.Println("Query failed to fetch spots\n", err)
 		return nil, err
 	}
 	spots_map_dict["total_spots_two_wheeler"] = total_spots
 	spots_map_dict["free_spots_two_wheeler"] = free_spots
-	err = DB.QueryRow(ctx, `SELECT COUNT(*) AS total_spots_four_wheeler,
-                        		COUNT(*) FILTER (WHERE availability = TRUE) AS free_spots_four_wheeler
+	err = DB.QueryRow(ctx, `SELECT COUNT(*)::int AS total_spots_four_wheeler,
+                        		(COUNT(*) FILTER (WHERE availability = TRUE))::int AS free_spots_four_wheeler
                         		FROM has_parking_spot WHERE wing = $1 AND size = $2`,
-		wing, "Four Wheeler").Scan(total_spots, free_spots) //order matters here: (total, free)
+		wing, "Four Wheeler").Scan(&total_spots, &free_spots) //order matters here: (total, free)
 	if err != nil {
 		log.Println("Query failed to fetch spots\n", err)
 		return nil, err
