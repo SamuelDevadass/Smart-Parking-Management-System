@@ -14,6 +14,6 @@ type WingInput struct {
 type GetCentreForWingsResponse struct {
 	Body struct {
 		Message string `json:"message" doc:"Status Message"`
-		Centre  string `json:"centre" doc:"Centre-id for current wing"`
+		Centre  int    `json:"centre" doc:"Centre-id for current wing"`
 	}
 }

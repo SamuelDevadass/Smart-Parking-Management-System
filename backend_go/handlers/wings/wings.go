@@ -47,13 +47,14 @@ func RegisterHandler(api huma.API) {
 			return nil, huma.Error500InternalServerError("Failed to fetch centre_id")
 		}
 
-		// Validation check: Return a 404 error if the string is empty
-		if centre_id == "" {
+		// Validation check: Return a 404 error if the centre_id is 0
+		if centre_id == 0 {
 			return nil, huma.Error404NotFound(fmt.Sprintf("No centre found for wing '%s'", input.Wing))
 		}
 
 		resp := &models.GetCentreForWingsResponse{}
-		resp.Body.Message = "Centre_id for current Wing"
+		//resp.Body.Message = "Centre_id for " + input.Wing
+		resp.Body.Message = fmt.Sprintf("Centre_id for '%s'", input.Wing)
 		resp.Body.Centre = centre_id
 
 		return resp, nil

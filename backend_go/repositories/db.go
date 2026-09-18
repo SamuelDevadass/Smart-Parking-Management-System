@@ -20,7 +20,7 @@ func Init_DB(ctx context.Context, connection_string string) {
 	fmt.Println("CONNECTION POOL READY")
 }
 
-// ------------------LIST WINGS------------------------
+// -------------------LIST WINGS------------------------
 func ListWings(ctx context.Context) ([]string, error) {
 	var result []string
 	var value string
@@ -43,12 +43,41 @@ func ListWings(ctx context.Context) ([]string, error) {
 	return result, nil
 }
 
-func GetCentreForWings(ctx context.Context, wing string) (string, error) {
-	var centre string
+// -----------------------GET CENTRE-ID FOR WING-------------------------
+func GetCentreForWings(ctx context.Context, wing string) (int, error) {
+	var centre int = 0
 	err := DB.QueryRow(ctx, `SELECT centre_id FROM has_wing_floor 
 										WHERE wing = ($1)`, wing).Scan(&centre)
 	if err != nil {
-		log.Fatalf("Query row failed")
+		log.Println("Query row failed")
 	}
 	return centre, err
+}
+
+// GET SPOT AVAILABILITY
+func GetSpotAvailability(ctx context.Context, wing string) (map[string]int, error) {
+	spots_map_dict := make(map[string]int)
+	var total_spots, free_spots int = 0, 0
+	err := DB.QueryRow(ctx, `SELECT COUNT(*) AS total_spots_two_wheeler,
+                        		COUNT(*) FILTER (WHERE availability = TRUE) AS free_spots_two_wheeler
+                        		FROM has_parking_spot WHERE wing = $1 AND size = $2`,
+		wing, "Two Wheeler").Scan(total_spots, free_spots) //order matters here: (total, free)
+	if err != nil {
+		log.Println("Query failed to fetch spots\n", err)
+		return nil, err
+	}
+	spots_map_dict["total_spots_two_wheeler"] = total_spots
+	spots_map_dict["free_spots_two_wheeler"] = free_spots
+	err = DB.QueryRow(ctx, `SELECT COUNT(*) AS total_spots_four_wheeler,
+                        		COUNT(*) FILTER (WHERE availability = TRUE) AS free_spots_four_wheeler
+                        		FROM has_parking_spot WHERE wing = $1 AND size = $2`,
+		wing, "Four Wheeler").Scan(total_spots, free_spots) //order matters here: (total, free)
+	if err != nil {
+		log.Println("Query failed to fetch spots\n", err)
+		return nil, err
+	}
+	spots_map_dict["total_spots_four_wheeler"] = total_spots
+	spots_map_dict["free_spots_four_wheeler"] = free_spots
+
+	return spots_map_dict, nil
 }

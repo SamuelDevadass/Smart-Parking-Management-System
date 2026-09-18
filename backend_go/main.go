@@ -12,6 +12,11 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 
+	/*created a single handlers package
+	all are directly under that package so no need to import individually*/
+	"api.com/handlers"
+	/*explicitly created a package wings under handlers
+	so it must be imported by name*/
 	"api.com/handlers/wings"
 	"api.com/repositories"
 )
@@ -59,7 +64,15 @@ func main() {
 	api := humachi.New(r, config)
 
 	// 4. REGISTER HANDLERS
+
+	/*explicitly created a package wings under handlers
+	so it must be registered and handled explicitly*/
 	wings.RegisterHandler(api)
+
+	//include all handlers directly
+	/*this includes all handlers directly since no separate packages (folders) were used
+	to define the individual routes the route paths and prefixes determine the correct route at runtime*/
+	handlers.RegisterHandler(api)
 
 	// 5. LISTEN AND SERVE
 	log.Printf("Server running on http://%s", backend_url)
