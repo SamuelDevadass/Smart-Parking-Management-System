@@ -69,6 +69,8 @@ func main() {
 	so it must be registered and handled explicitly*/
 	wings.RegisterHandler(api)
 
+	//detection -->grpc
+
 	//include all handlers directly
 	/*this includes all handlers directly since no separate packages (folders) were used
 	to define the individual routes the route paths and prefixes determine the correct route at runtime*/

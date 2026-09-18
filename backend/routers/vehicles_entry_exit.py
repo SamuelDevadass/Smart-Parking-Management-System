@@ -3,6 +3,7 @@ from datetime import datetime
 from services import db
 from schemas import EntryPayload, ExitPayload, VehiclePayload
 from services.billing import calculate_bill_amount
+from services.folder_path_service import create_folder_path
 
 router = APIRouter()
 
@@ -24,10 +25,11 @@ def save_vehicle(payload: VehiclePayload):
 
 @router.post("/api/entries")
 def mark_entry(payload: EntryPayload):
+    folder_path = create_folder_path(payload.license_plate)
     db.mark_entry(entry_time=datetime.now(),
                     license_plate=payload.license_plate, centre_id=payload.centre_id,
                     wing=payload.wing, floor=payload.floor,
-                    spot_number=payload.spot_number, folder_path=payload.folder_path or "",)
+                    spot_number=payload.spot_number, folder_path=folder_path or "",)
     return {"ok": True}
 
 @router.get("/api/vehicles/spot/{license_plate}")
@@ -42,6 +44,7 @@ def get_spot_details(license_plate: str):
 
 @router.post("/api/exits")
 def mark_exit(payload: ExitPayload):
+    _ = create_folder_path(payload.license_plate)
     session = db.get_active_session(payload.license_plate)
     if session is None:
         raise HTTPException(status_code=404, 
