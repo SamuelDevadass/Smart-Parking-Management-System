@@ -192,6 +192,7 @@ func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time tim
 	return true, nil
 }
 
+// Get Active Session
 func GetActiveSession(ctx context.Context, input *models.GetVehicleInput) (*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}
 	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
@@ -203,6 +204,52 @@ func GetActiveSession(ctx context.Context, input *models.GetVehicleInput) (*mode
 		return nil, err
 	}
 	return resp, nil
+}
+
+func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (*models.GetActiveSessionResponse, error) {
+	resp := &models.GetActiveSessionResponse{}
+	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
+                        		FROM parking_log WHERE license_number = $1 
+                        		AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`, input.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID,
+		resp.Body.Wing, resp.Body.Floor, resp.Body.SpotNumber)
+	if err != nil {
+		log.Println("Error fetching session details\n", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// Helper
+// get vehicle type
+func GetvehicleType(ctx context.Context, license_plate string) (string, error) {
+	var vehicle_type string
+	err := DB.QueryRow(ctx, `SELECT type FROM owns_vehicle
+						WHERE license_number = $1`, license_plate).Scan(&vehicle_type)
+	if err != nil {
+		log.Println("Error fetching vehicle type\n", err)
+		return "", err
+	}
+	return vehicle_type, nil
+}
+
+// Helper
+// record details
+// Mark Entry Input, Get Latest Bill Response
+func RecordExit(ctx context.Context, details *models.MarkExitInput) (bool, error) {
+	_, err := DB.Exec(ctx, `UPDATE parking_log
+                        	SET exit_time = $1, duration = $2, amount = $3
+                        	WHERE entry_time = $4 AND exit_time IS NULL`, details.ExitTime, details.Duration, details.Amount, details.EntryTime)
+	if err != nil {
+		log.Println("Error updating exit records\n", err)
+		return false, err
+	}
+	_, err = DB.Exec(ctx, `UPDATE has_parking_spot SET availability = True
+                        	WHERE centre_id = %1 AND wing = $2 AND floor = $3 AND spot_number = $4`, details.CentreID, details.Wing, details.Floor, details.SpotNumber)
+	if err != nil {
+		log.Println("Error updating spot availability records\n", err)
+		return false, err
+	}
+	return true, nil
 }
 
 // Get latest bill

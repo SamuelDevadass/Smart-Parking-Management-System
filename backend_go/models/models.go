@@ -100,6 +100,19 @@ type GetSpotDetailsResponse struct {
 }
 
 // -----------------VehicleEntryExit:mark-exit-------------------
+
+type MarkExitInput struct {
+	LicensePlate string    `json:"license_plate" doc:"License Number"`
+	EntryTime    time.Time `json:"entry_time" doc:"Entry Time"`
+	ExitTime     time.Time `json:"exit_time" doc:"Exit Time"`
+	Duration     string    `json:"duration" doc:"(string)ExitTime - EntryTime"`
+	Amount       float32   `json:"amount" doc:"Final Bill Amount"`
+	CentreID     int       `json:"centre_id" doc:"Centre id currently selected"`
+	Wing         string    `json:"wing" doc:"Wing currently selected"`
+	Floor        string    `json:"floor" doc:"Floor curently selected"`
+	SpotNumber   string    `json:"spot_number" doc:"Spot Number currectly selected"`
+}
+
 type MarkExitResponse struct {
 	Body struct {
 		Message   string    `json:"message" doc:"Message"`

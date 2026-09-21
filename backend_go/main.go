@@ -76,6 +76,7 @@ func main() {
 	you to have multiple files with same function name*/
 	handlers.RegisterSpotHandler(api)
 	handlers.RegisterVehicleEntryExitHandler(api)
+	handlers.RegisterBillsHandler(api)
 
 	// 5. LISTEN AND SERVE
 	log.Printf("Server running on http://%s", backend_url)
