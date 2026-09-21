@@ -11,7 +11,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-func RegisterHandler(api huma.API) {
+func RegisterSpotHandler(api huma.API) {
 	//lists both total and free spots to display count of both
 	huma.Register(api, huma.Operation{
 		OperationID: "get-spot-availability",

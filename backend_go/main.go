@@ -72,9 +72,10 @@ func main() {
 	//detection -->grpc
 
 	//include all handlers directly
-	/*this includes all handlers directly since no separate packages (folders) were used
-	to define the individual routes the route paths and prefixes determine the correct route at runtime*/
-	handlers.RegisterHandler(api)
+	/*each handler must have a unique register function otherwise go wont allow
+	you to have multiple files with same function name*/
+	handlers.RegisterSpotHandler(api)
+	handlers.RegisterVehicleEntryExitHandler(api)
 
 	// 5. LISTEN AND SERVE
 	log.Printf("Server running on http://%s", backend_url)

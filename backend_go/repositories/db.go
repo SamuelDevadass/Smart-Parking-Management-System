@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
+	"api.com/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -92,7 +94,7 @@ func GetSpotAvailability(ctx context.Context, wing string) (map[string]int, erro
 	return spots_map_dict, nil
 }
 
-// GET AVAILABLE SPOTS
+// -----------------------------------GET AVAILABLE SPOTS--------------------------------------------------------------
 func GetAvailableSpots(ctx context.Context, wing string, centre_id int, size string) ([]map[string]string, error) {
 	var floor, spot_number, size_r string
 	var result []map[string]string
@@ -120,4 +122,85 @@ func GetAvailableSpots(ctx context.Context, wing string, centre_id int, size str
 		return nil, err
 	}
 	return result, nil
+}
+
+// ---------------GET VEHICLE--------------
+func GetVehicle(ctx context.Context, license_plate string) (*models.VehicleDetails, error) {
+	var vehicle models.VehicleDetails
+	err := DB.QueryRow(ctx, `SELECT owner_id::int, model, colour, type
+                        		FROM owns_vehicle WHERE license_number = $1`,
+		license_plate).Scan(&vehicle.OwnerID, &vehicle.Model, &vehicle.Colour, &vehicle.Type)
+	if err != nil {
+		log.Println("Query failed to fetch Vehicle Details\n", err)
+		return nil, err
+	}
+
+	err = DB.QueryRow(ctx, `SELECT phone FROM owner_phone WHERE owner_id = $1 LIMIT 1`, vehicle.OwnerID).Scan(&vehicle.Phone)
+	if err != nil {
+		log.Println("Query failed to fetch User Phone\n", err)
+		return nil, err
+	}
+
+	err = DB.QueryRow(ctx, `SELECT name FROM owner WHERE owner_id = $1 LIMIT 1`, vehicle.OwnerID).Scan(&vehicle.Name)
+	if err != nil {
+		log.Println("Query failed to fetch User Phone\n", err)
+		return nil, err
+	}
+	return &vehicle, nil
+}
+
+func SaveVehicle(ctx context.Context, vehicle *models.VehicleDetails, license_plate string) (bool, error) {
+	_, err := DB.Exec(ctx, `INSERT INTO owner (owner_id, name) VALUES ($1, $2)
+                        		ON CONFLICT (owner_id) DO NOTHING`, vehicle.OwnerID, vehicle.Name)
+	if err != nil {
+		log.Println("Insert failed:\n", err)
+		return false, err
+	}
+	_, err = DB.Exec(ctx, `INSERT INTO owner_phone (owner_id, phone) VALUES ($1, $2)
+                        		ON CONFLICT (owner_id) DO NOTHING`, vehicle.OwnerID, vehicle.Phone)
+	if err != nil {
+		log.Println("Insert failed:\n", err)
+		return false, err
+	}
+	_, err = DB.Exec(ctx, `INSERT INTO owns_vehicle (owner_id, license_number, model, colour, type)
+                        		VALUES ($1, $2, $3, $4, $5)
+                        ON CONFLICT (license_number) DO NOTHING`, vehicle.OwnerID, license_plate, vehicle.Model, vehicle.Colour, vehicle.Type)
+	if err != nil {
+		log.Println("Insert failed:\n", err)
+		return false, err
+	}
+	return true, nil
+}
+
+// Mark Entry
+func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time time.Time) (bool, error) {
+	_, err := DB.Exec(ctx, `INSERT INTO parking_log 
+							(entry_time,license_number, centre_id, 
+                     		wing, floor, spot_number, image_folder_path)
+                    		VALUES ($1,$2,$3,$4,$5,$6,$7)`, entry_time, input.LicensePlate, input.CentreID, input.Wing, input.Floor, input.SpotNumber, input.FolderPath)
+	if err != nil {
+		log.Println("Insert failed:\n", err)
+		return false, err
+	}
+	_, err = DB.Exec(ctx, `UPDATE has_parking_spot SET availability = False
+                        	WHERE centre_id = $1 AND wing = $2 AND floor = $3 AND spot_number = $4`,
+		input.CentreID, input.Wing, input.Floor, input.SpotNumber)
+	if err != nil {
+		log.Println("Update failed:\n", err)
+		return false, err
+	}
+	return true, nil
+}
+
+func GetActiveSession(ctx context.Context, input *models.GetVehicleInput) (*models.GetActiveSessionResponse, error) {
+	resp := &models.GetActiveSessionResponse{}
+	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
+                        		FROM parking_log WHERE license_number = $1 
+                        		AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`, input.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID,
+		resp.Body.Wing, resp.Body.Floor, resp.Body.SpotNumber)
+	if err != nil {
+		log.Println("Error fetching session details\n", err)
+		return nil, err
+	}
+	return resp, nil
 }
