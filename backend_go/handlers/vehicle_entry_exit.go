@@ -84,4 +84,24 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		resp.Body.Status = true
 		return resp, nil
 	})
+
+	/*huma.Register(api, huma.Operation{
+		OperationID: "mark-exit",
+		Method:      http.MethodPost,
+		Path:        "/api/exits",
+	}, func(ctx context.Context, input *models.GetVehicleInput) (*models.GetSpotDetailsResponse, error) {
+		ans, err := repositories.GetActiveSession(ctx, input)
+		if err != nil {
+			log.Println("Failed to mark entry \n", err)
+			return nil, huma.Error500InternalServerError("Failed to fetch session details")
+		}
+		if ans == nil {
+			return nil, huma.Error404NotFound(fmt.Sprintf("No session details found for license plate '%s'", input.LicensePlate))
+		}
+		resp := &models.GetSpotDetailsResponse{}
+		resp.Body.Message = fmt.Sprintf("Session details for License Plate '%s'", input.LicensePlate)
+		resp.Body.SpotNumber = ans.Body.SpotNumber
+		resp.Body.Status = true
+		return resp, nil
+	})*/
 }

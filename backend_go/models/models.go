@@ -109,3 +109,16 @@ type MarkExitResponse struct {
 		Amount    float32   `json:"amount" doc:"Final Bill Amount"`
 	}
 }
+
+// -----------------Bills:get-latest-bill-------------------
+// uses LicensePlate as Path
+type GetLatestBillResponse struct {
+	Body struct {
+		Message   string    `json:"message" doc:"Message"`
+		EntryTime time.Time `json:"entry_time" doc:"Entry Time"`
+		ExitTime  time.Time `json:"exit_time" doc:"Exit Time"`
+		Duration  string    `json:"duration" doc:"(string)ExitTime - EntryTime"`
+		Amount    float32   `json:"amount" doc:"Final Bill Amount"`
+		OwnerName string    `json:"owner_name" doc:"Owner's name"`
+	}
+}

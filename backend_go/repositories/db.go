@@ -204,3 +204,24 @@ func GetActiveSession(ctx context.Context, input *models.GetVehicleInput) (*mode
 	}
 	return resp, nil
 }
+
+// Get latest bill
+func GetLatestBill(ctx context.Context, input *models.GetVehicleInput) (*models.GetLatestBillResponse, error) {
+	resp := &models.GetLatestBillResponse{}
+	err := DB.QueryRow(ctx, `SELECT entry_time, exit_time, duration, amount
+                        	FROM parking_log WHERE license_number = $1 AND exit_time IS NOT NULL
+                       	 	ORDER BY exit_time DESC LIMIT 1`, input.LicensePlate).
+		Scan(&resp.Body.EntryTime, &resp.Body.ExitTime, &resp.Body.Duration, &resp.Body.Amount)
+	if err != nil {
+		log.Println("Error fetching bill details\n", err)
+		return nil, err
+	}
+	err = DB.QueryRow(ctx, `SELECT o.name FROM owner o 
+                        		JOIN owns_vehicle v ON v.owner_id = o.owner_id
+                        		WHERE v.license_number = $1`, input.LicensePlate).Scan(&resp.Body.OwnerName)
+	if err != nil {
+		log.Println("Error fetching bill details\n", err)
+		return nil, err
+	}
+	return resp, nil
+}
