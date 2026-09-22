@@ -51,3 +51,13 @@ the go env looks for 1st @ so if pw contains @ write as %40 alwys use the codes 
 
 
 In Go, maps are reference types. When you declare single_row := make(map[string]string) outside of a loop and keep appending it, you aren't adding new items—you are appending references to the exact same map. By the time the loop finishes, every single item in your list will look like the very last row fetched.
+
+
+Define an input model for each handler
+For get methods a Body struct tag is not necessary but for post or put methods a Body struct tag in the input is mandatory 
+
+![alt text](image-2.png)
+
+For request bodies (POST, PUT, PATCH): Huma looks specifically for a field named Body to map the incoming JSON payload. If you don't name it Body (or if you leave it flat at the top level), Huma assumes those fields are meant to come from the URL query string or path parameters instead, which is why nothing showed up in the JSON body section of your Swagger docs.
+
+For GET requests: Since GET requests don't have a body by definition, you never use a Body struct. You just put your parameters (like path or query) directly on the input struct or let it be empty.

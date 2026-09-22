@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // -----------------Spots:get-spot-availability-------------------
@@ -30,12 +32,21 @@ type GetAvailableSpotsResponse struct {
 }
 
 // -----------------VehicleEntryExit:get-vehicle-------------------
-type GetVehicleInput struct {
+// for Post/Put/Patch methods use GetVehicleInput
+// for Get use GetLicensePlate
+type GetLicensePlate struct {
 	LicensePlate string `path:"license_plate" doc:"License Plate to fetch details of vehicle"`
 }
 
+// helper
+type GetVehicleInput struct {
+	Body struct {
+		LicensePlate string `path:"license_plate" doc:"License Plate to fetch details of vehicle"`
+	}
+}
+
 type VehicleDetails struct {
-	OwnerID int    `json:"owner_id" doc:"OwnerID for this license plate"`
+	OwnerID string `json:"owner_id" doc:"OwnerID for this license plate"`
 	Model   string `json:"model" doc:"Model of Vehicle for this license plate"`
 	Colour  string `json:"colour" doc:"Colour of vehicle for this license plate"`
 	Type    string `json:"vehicle_type" doc:"Type of Vehicle for this license plate"`
@@ -52,8 +63,10 @@ type GetVehicleResponse struct {
 
 // -----------------VehicleEntryExit:save-vehicle-------------------
 type SaveVehicleInput struct {
-	LicensePlate   string         `json:"license_plate" doc:"License Number"`
-	VehicleDetails VehicleDetails `json:"vehicle_details"`
+	Body struct {
+		LicensePlate   string         `json:"license_plate" doc:"License Number"`
+		VehicleDetails VehicleDetails `json:"vehicle_details"`
+	}
 }
 type SaveVehicleResponse struct {
 	Body struct {
@@ -64,12 +77,14 @@ type SaveVehicleResponse struct {
 
 // -----------------VehicleEntryExit:mark-entry-------------------
 type MarkEntryInput struct {
-	LicensePlate string `json:"license_plate" doc:"License Number"`
-	CentreID     int    `json:"centre_id" doc:"Centre id currently selected"`
-	Wing         string `json:"wing" doc:"Wing currently selected"`
-	Floor        string `json:"floor" doc:"Floor curently selected"`
-	SpotNumber   string `json:"spot_number" doc:"Spot Number currectly selected"`
-	FolderPath   string `json:"folder_path" doc:"Folder Path to save capture"`
+	Body struct {
+		LicensePlate string `json:"license_plate" doc:"License Number"`
+		CentreID     int    `json:"centre_id" doc:"Centre id currently selected"`
+		Wing         string `json:"wing" doc:"Wing currently selected"`
+		Floor        string `json:"floor" doc:"Floor curently selected"`
+		SpotNumber   string `json:"spot_number" doc:"Spot Number currectly selected"`
+		FolderPath   string `json:"folder_path" doc:"Folder Path to save capture"`
+	}
 }
 
 type MarkEntryResonse struct {
@@ -84,7 +99,7 @@ type GetActiveSessionResponse struct {
 	Body struct {
 		Message    string    `json:"message" doc:"Latest session details"`
 		EntryTime  time.Time `json:"entry_time" doc:"Latest entry time"`
-		CentreID   string    `json:"centre_id" doc:"Centre-id of latest session"`
+		CentreID   int       `json:"centre_id" doc:"Centre-id of latest session"`
 		Wing       string    `json:"wing" doc:"Wing of latest session"`
 		Floor      string    `json:"floor" doc:"Floor of latest session"`
 		SpotNumber string    `json:"spot_number" doc:"Spot Number of latest session"`
@@ -102,15 +117,17 @@ type GetSpotDetailsResponse struct {
 // -----------------VehicleEntryExit:mark-exit-------------------
 
 type MarkExitInput struct {
-	LicensePlate string    `json:"license_plate" doc:"License Number"`
-	EntryTime    time.Time `json:"entry_time" doc:"Entry Time"`
-	ExitTime     time.Time `json:"exit_time" doc:"Exit Time"`
-	Duration     string    `json:"duration" doc:"(string)ExitTime - EntryTime"`
-	Amount       float32   `json:"amount" doc:"Final Bill Amount"`
-	CentreID     int       `json:"centre_id" doc:"Centre id currently selected"`
-	Wing         string    `json:"wing" doc:"Wing currently selected"`
-	Floor        string    `json:"floor" doc:"Floor curently selected"`
-	SpotNumber   string    `json:"spot_number" doc:"Spot Number currectly selected"`
+	Body struct {
+		LicensePlate string    `json:"license_plate" doc:"License Number"`
+		EntryTime    time.Time `json:"entry_time" doc:"Entry Time"`
+		ExitTime     time.Time `json:"exit_time" doc:"Exit Time"`
+		Duration     string    `json:"duration" doc:"(string)ExitTime - EntryTime"`
+		Amount       float32   `json:"amount" doc:"Final Bill Amount"`
+		CentreID     int       `json:"centre_id" doc:"Centre id currently selected"`
+		Wing         string    `json:"wing" doc:"Wing currently selected"`
+		Floor        string    `json:"floor" doc:"Floor curently selected"`
+		SpotNumber   string    `json:"spot_number" doc:"Spot Number currectly selected"`
+	}
 }
 
 type MarkExitResponse struct {
@@ -127,11 +144,11 @@ type MarkExitResponse struct {
 // uses LicensePlate as Path
 type GetLatestBillResponse struct {
 	Body struct {
-		Message   string    `json:"message" doc:"Message"`
-		EntryTime time.Time `json:"entry_time" doc:"Entry Time"`
-		ExitTime  time.Time `json:"exit_time" doc:"Exit Time"`
-		Duration  string    `json:"duration" doc:"(string)ExitTime - EntryTime"`
-		Amount    float32   `json:"amount" doc:"Final Bill Amount"`
-		OwnerName string    `json:"owner_name" doc:"Owner's name"`
+		Message   string          `json:"message" doc:"Message"`
+		EntryTime time.Time       `json:"entry_time" doc:"Entry Time"`
+		ExitTime  time.Time       `json:"exit_time" doc:"Exit Time"`
+		Duration  pgtype.Interval `json:"duration" doc:"(Interval)ExitTime - EntryTime"`
+		Amount    float32         `json:"amount" doc:"Final Bill Amount"`
+		OwnerName string          `json:"owner_name" doc:"Owner's name"`
 	}
 }

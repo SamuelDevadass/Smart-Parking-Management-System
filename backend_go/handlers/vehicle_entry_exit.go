@@ -18,7 +18,7 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		OperationID: "get-vehicle",
 		Method:      http.MethodGet,
 		Path:        "/api/vehicles/{license_plate}",
-	}, func(ctx context.Context, input *models.GetVehicleInput) (*models.GetVehicleResponse, error) {
+	}, func(ctx context.Context, input *models.GetLicensePlate) (*models.GetVehicleResponse, error) {
 		vehicle, err := repositories.GetVehicle(ctx, input.LicensePlate)
 		if err != nil {
 			log.Println("Failed to fetch vehicle details \n", err)
@@ -35,23 +35,23 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 
 	huma.Register(api, huma.Operation{
 		OperationID: "save-vehicle",
-		Method:      http.MethodPut,
+		Method:      http.MethodPost,
 		Path:        "/api/vehicles",
 	}, func(ctx context.Context, input *models.SaveVehicleInput) (*models.SaveVehicleResponse, error) {
-		status, err := repositories.SaveVehicle(ctx, &input.VehicleDetails, input.LicensePlate)
+		status, err := repositories.SaveVehicle(ctx, &input.Body.VehicleDetails, input.Body.LicensePlate)
 		if err != nil || status != true {
 			log.Println("Failed to save vehicle details \n", err)
 			return nil, huma.Error500InternalServerError("Failed to save vehicle details")
 		}
 		resp := &models.SaveVehicleResponse{}
-		resp.Body.Message = fmt.Sprintf("Vehicle Details for license plate '%s'", input.LicensePlate)
+		resp.Body.Message = fmt.Sprintf("Vehicle Details for license plate '%s'", input.Body.LicensePlate)
 		resp.Body.Status = true
 		return resp, nil
 	})
 
 	huma.Register(api, huma.Operation{
 		OperationID: "mark-entry",
-		Method:      http.MethodPut,
+		Method:      http.MethodPost,
 		Path:        "/api/entries",
 	}, func(ctx context.Context, input *models.MarkEntryInput) (*models.MarkEntryResonse, error) {
 		now := time.Now()
@@ -61,7 +61,7 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 			return nil, huma.Error500InternalServerError("Failed to mark entry")
 		}
 		resp := &models.MarkEntryResonse{}
-		resp.Body.Message = fmt.Sprintf("Vehicle Details for license plate '%s'", input.LicensePlate)
+		resp.Body.Message = fmt.Sprintf("Vehicle Details for license plate '%s'", input.Body.LicensePlate)
 		resp.Body.Status = true
 		return resp, nil
 	})
@@ -70,7 +70,7 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		OperationID: "get-spot-details",
 		Method:      http.MethodGet,
 		Path:        "/api/vehicles/spot/{license_plate}",
-	}, func(ctx context.Context, input *models.GetVehicleInput) (*models.GetSpotDetailsResponse, error) {
+	}, func(ctx context.Context, input *models.GetLicensePlate) (*models.GetSpotDetailsResponse, error) {
 		ans, err := repositories.GetActiveSession(ctx, input)
 		if err != nil {
 			log.Println("Failed to mark entry \n", err)
@@ -88,7 +88,7 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 
 	huma.Register(api, huma.Operation{
 		OperationID: "mark-exit",
-		Method:      http.MethodPost,
+		Method:      http.MethodPut,
 		Path:        "/api/exits",
 	}, func(ctx context.Context, input *models.MarkExitInput) (*models.MarkExitResponse, error) {
 		session, err := repositories.GetActiveSession_NoPath(ctx, input)
@@ -97,16 +97,16 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 			return nil, huma.Error500InternalServerError("Failed to fetch session details")
 		}
 		if session == nil {
-			return nil, huma.Error404NotFound(fmt.Sprintf("No active session found for license plate '%s'", input.LicensePlate))
+			return nil, huma.Error404NotFound(fmt.Sprintf("No active session found for license plate '%s'", input.Body.LicensePlate))
 		}
 
-		vehicleType, err := repositories.GetvehicleType(ctx, input.LicensePlate)
+		vehicleType, err := repositories.GetvehicleType(ctx, input.Body.LicensePlate)
 		if err != nil {
 			log.Println("Failed to fetch vehicle type \n", err)
 			return nil, huma.Error500InternalServerError("Failed to fetch vehicle type")
 		}
 		if vehicleType == "" {
-			return nil, huma.Error404NotFound(fmt.Sprintf("No vehicle type found for license plate '%s'", input.LicensePlate))
+			return nil, huma.Error404NotFound(fmt.Sprintf("No vehicle type found for license plate '%s'", input.Body.LicensePlate))
 		}
 
 		exitTime := time.Now()

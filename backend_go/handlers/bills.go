@@ -16,7 +16,7 @@ func RegisterBillsHandler(api huma.API) {
 		OperationID: "get-latest-bill",
 		Method:      http.MethodGet,
 		Path:        "/api/bills/{license_plate}/latest",
-	}, func(ctx context.Context, input *models.GetVehicleInput) (*models.GetLatestBillResponse, error) {
+	}, func(ctx context.Context, input *models.GetLicensePlate) (*models.GetLatestBillResponse, error) {
 		ans, err := repositories.GetLatestBill(ctx, input)
 		if err != nil {
 			log.Println("Failed to fetch vehicle details \n", err)

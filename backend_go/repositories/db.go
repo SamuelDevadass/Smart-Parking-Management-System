@@ -127,7 +127,7 @@ func GetAvailableSpots(ctx context.Context, wing string, centre_id int, size str
 // ---------------GET VEHICLE--------------
 func GetVehicle(ctx context.Context, license_plate string) (*models.VehicleDetails, error) {
 	var vehicle models.VehicleDetails
-	err := DB.QueryRow(ctx, `SELECT owner_id::int, model, colour, type
+	err := DB.QueryRow(ctx, `SELECT owner_id, model, colour, type
                         		FROM owns_vehicle WHERE license_number = $1`,
 		license_plate).Scan(&vehicle.OwnerID, &vehicle.Model, &vehicle.Colour, &vehicle.Type)
 	if err != nil {
@@ -157,7 +157,7 @@ func SaveVehicle(ctx context.Context, vehicle *models.VehicleDetails, license_pl
 		return false, err
 	}
 	_, err = DB.Exec(ctx, `INSERT INTO owner_phone (owner_id, phone) VALUES ($1, $2)
-                        		ON CONFLICT (owner_id) DO NOTHING`, vehicle.OwnerID, vehicle.Phone)
+                        		ON CONFLICT (owner_id, phone) DO NOTHING`, vehicle.OwnerID, vehicle.Phone)
 	if err != nil {
 		log.Println("Insert failed:\n", err)
 		return false, err
@@ -177,14 +177,14 @@ func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time tim
 	_, err := DB.Exec(ctx, `INSERT INTO parking_log 
 							(entry_time,license_number, centre_id, 
                      		wing, floor, spot_number, image_folder_path)
-                    		VALUES ($1,$2,$3,$4,$5,$6,$7)`, entry_time, input.LicensePlate, input.CentreID, input.Wing, input.Floor, input.SpotNumber, input.FolderPath)
+                    		VALUES ($1,$2,$3,$4,$5,$6,$7)`, entry_time, input.Body.LicensePlate, input.Body.CentreID, input.Body.Wing, input.Body.Floor, input.Body.SpotNumber, input.Body.FolderPath)
 	if err != nil {
 		log.Println("Insert failed:\n", err)
 		return false, err
 	}
 	_, err = DB.Exec(ctx, `UPDATE has_parking_spot SET availability = False
                         	WHERE centre_id = $1 AND wing = $2 AND floor = $3 AND spot_number = $4`,
-		input.CentreID, input.Wing, input.Floor, input.SpotNumber)
+		input.Body.CentreID, input.Body.Wing, input.Body.Floor, input.Body.SpotNumber)
 	if err != nil {
 		log.Println("Update failed:\n", err)
 		return false, err
@@ -193,12 +193,12 @@ func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time tim
 }
 
 // Get Active Session
-func GetActiveSession(ctx context.Context, input *models.GetVehicleInput) (*models.GetActiveSessionResponse, error) {
+func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}
 	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
                         		FROM parking_log WHERE license_number = $1 
                         		AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`, input.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID,
-		resp.Body.Wing, resp.Body.Floor, resp.Body.SpotNumber)
+		&resp.Body.Wing, &resp.Body.Floor, &resp.Body.SpotNumber)
 	if err != nil {
 		log.Println("Error fetching session details\n", err)
 		return nil, err
@@ -210,8 +210,8 @@ func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (
 	resp := &models.GetActiveSessionResponse{}
 	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
                         		FROM parking_log WHERE license_number = $1 
-                        		AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`, input.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID,
-		resp.Body.Wing, resp.Body.Floor, resp.Body.SpotNumber)
+                        		AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`, input.Body.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID,
+		&resp.Body.Wing, &resp.Body.Floor, &resp.Body.SpotNumber)
 	if err != nil {
 		log.Println("Error fetching session details\n", err)
 		return nil, err
@@ -238,13 +238,13 @@ func GetvehicleType(ctx context.Context, license_plate string) (string, error) {
 func RecordExit(ctx context.Context, details *models.MarkExitInput) (bool, error) {
 	_, err := DB.Exec(ctx, `UPDATE parking_log
                         	SET exit_time = $1, duration = $2, amount = $3
-                        	WHERE entry_time = $4 AND exit_time IS NULL`, details.ExitTime, details.Duration, details.Amount, details.EntryTime)
+                        	WHERE entry_time = $4 AND exit_time IS NULL`, details.Body.ExitTime, details.Body.Duration, details.Body.Amount, details.Body.EntryTime)
 	if err != nil {
 		log.Println("Error updating exit records\n", err)
 		return false, err
 	}
 	_, err = DB.Exec(ctx, `UPDATE has_parking_spot SET availability = True
-                        	WHERE centre_id = %1 AND wing = $2 AND floor = $3 AND spot_number = $4`, details.CentreID, details.Wing, details.Floor, details.SpotNumber)
+                        	WHERE centre_id = $1 AND wing = $2 AND floor = $3 AND spot_number = $4`, details.Body.CentreID, details.Body.Wing, details.Body.Floor, details.Body.SpotNumber)
 	if err != nil {
 		log.Println("Error updating spot availability records\n", err)
 		return false, err
@@ -253,7 +253,7 @@ func RecordExit(ctx context.Context, details *models.MarkExitInput) (bool, error
 }
 
 // Get latest bill
-func GetLatestBill(ctx context.Context, input *models.GetVehicleInput) (*models.GetLatestBillResponse, error) {
+func GetLatestBill(ctx context.Context, input *models.GetLicensePlate) (*models.GetLatestBillResponse, error) {
 	resp := &models.GetLatestBillResponse{}
 	err := DB.QueryRow(ctx, `SELECT entry_time, exit_time, duration, amount
                         	FROM parking_log WHERE license_number = $1 AND exit_time IS NOT NULL
