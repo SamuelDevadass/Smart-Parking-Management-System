@@ -19,11 +19,14 @@ export default function SelectWingPage({ data, updateData, goTo })
   {
     const wing = e.target.value;
     updateData({ wing, centre_id: null });
-    try 
-    {
-      const { centre_id } = await Api.getCentreForWing(wing);
-      updateData({ centre_id });
-    } 
+     try 
+  {
+    const centre_id = await Api.getCentreForWing(wing);
+
+    console.log("CENTRE ID:", centre_id);
+
+    updateData({ centre_id });
+  } 
     catch (err) 
     {
       setError(err.message);

@@ -41,8 +41,12 @@ export const Api = {
 
   getCentreForWing: async (wing) => {
     const data = await request(
-      `/wings/${encodeURIComponent(wing)}/centre_id`
+      `/wings/${encodeURIComponent(wing)}/centre`
     );
+
+    console.log("FULL RESPONSE:", data);
+    console.log("CENTRE_ID:", data?.centre_id);
+
 
     return data.centre_id;
   },
