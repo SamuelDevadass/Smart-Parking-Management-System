@@ -144,14 +144,13 @@ getSpotAvailability: (wing) =>
   // EXIT
   // ============================================================
 
-  markExit: async (payload) => {
-    const data = await request("/exits", {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    });
-
-    return data;
-  },
+  markExit: (licensePlate) =>
+  request("/exits", {
+    method: "PUT",
+    body: JSON.stringify({
+      license_plate: licensePlate
+    })
+  }),
 
   // ============================================================
   // BILL

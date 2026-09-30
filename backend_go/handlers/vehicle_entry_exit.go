@@ -104,13 +104,17 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		Method:      http.MethodPut,
 		Path:        "/api/exits",
 	}, func(ctx context.Context, input *models.MarkExitInput) (*models.MarkExitResponse, error) {
+
 		session, err := repositories.GetActiveSession_NoPath(ctx, input)
 		if err != nil {
 			log.Println("Failed to fetch active session \n", err)
 			return nil, huma.Error500InternalServerError("Failed to fetch session details")
 		}
+
 		if session == nil {
-			return nil, huma.Error404NotFound(fmt.Sprintf("No active session found for license plate '%s'", input.Body.LicensePlate))
+			return nil, huma.Error404NotFound(
+				fmt.Sprintf("No active session found for license plate '%s'", input.Body.LicensePlate),
+			)
 		}
 
 		vehicleType, err := repositories.GetvehicleType(ctx, input.Body.LicensePlate)
@@ -118,8 +122,11 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 			log.Println("Failed to fetch vehicle type \n", err)
 			return nil, huma.Error500InternalServerError("Failed to fetch vehicle type")
 		}
+
 		if vehicleType == "" {
-			return nil, huma.Error404NotFound(fmt.Sprintf("No vehicle type found for license plate '%s'", input.Body.LicensePlate))
+			return nil, huma.Error404NotFound(
+				fmt.Sprintf("No vehicle type found for license plate '%s'", input.Body.LicensePlate),
+			)
 		}
 
 		exitTime := time.Now()
@@ -128,31 +135,29 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		duration := exitTime.Sub(entryTime)
 		amount := services.CalculateBillAmount(duration.Seconds(), vehicleType)
 
-		// Put the calculated/session values into the input
-		// before sending it to the repository.
-		input.Body.EntryTime = entryTime
-		input.Body.ExitTime = exitTime
-		input.Body.Duration = duration.String()
-		input.Body.Amount = float32(amount)
+		details := &models.RecordExitDetails{
+			EntryTime:  entryTime,
+			ExitTime:   exitTime,
+			Duration:   duration.String(),
+			Amount:     float32(amount),
+			CentreID:   session.Body.CentreID,
+			Wing:       session.Body.Wing,
+			Floor:      session.Body.Floor,
+			SpotNumber: session.Body.SpotNumber,
+		}
 
-		input.Body.CentreID = session.Body.CentreID
-		input.Body.Wing = session.Body.Wing
-		input.Body.Floor = session.Body.Floor
-		input.Body.SpotNumber = session.Body.SpotNumber
-
-		status, err := repositories.RecordExit(ctx, input)
+		status, err := repositories.RecordExit(ctx, details)
 		if err != nil || !status {
 			log.Println("Failed to record exit \n", err)
 			return nil, huma.Error500InternalServerError("Failed to record exit")
 		}
 
-		// Populate the response matching your MarkExitResponse model
 		resp := &models.MarkExitResponse{}
 		resp.Body.Message = "Parking session ended successfully"
 		resp.Body.EntryTime = entryTime
 		resp.Body.ExitTime = exitTime
-		resp.Body.Duration = duration.String() // Equivalent to Python's str(duration)
-		resp.Body.Amount = float32(amount)     // Convert float64 to float32 for your model
+		resp.Body.Duration = duration.String()
+		resp.Body.Amount = float32(amount)
 
 		return resp, nil
 	})
