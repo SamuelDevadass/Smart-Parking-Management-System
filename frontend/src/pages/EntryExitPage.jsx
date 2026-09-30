@@ -22,10 +22,10 @@ export default function EntryExitPage({ data, updateData, goTo })
   { setSelectedKey("");
     updateData({ floor: null, spotNumber: null });
     loadSpots();
-    if (data.licensePlate)
+    /*if (data.licensePlate)
     {
       getSpot();
-    }
+    }*/
   }, [data.size, data.licensePlate],);
 
   function handleSelect(e) 
@@ -75,20 +75,29 @@ export default function EntryExitPage({ data, updateData, goTo })
   }
 }
 
-  async function markExit() 
-  {
-    setError(null);
-    try 
-    {
-      await Api.markExit(data.licensePlate);
-      setMessage("Exit recorded — bill is ready.");
-      loadSpots();
-    } 
-    catch (err) 
-    {
-      setError(err.message);
+  async function markExit() {
+  setError(null);
+
+  try {
+    // First fetch the active session so the UI can display the occupied spot
+    const result = await Api.getSpot(data.licensePlate);
+
+    if (!result.status) {
+      setError("No active parking session found.");
+      return;
     }
+
+    setOccupiedSpot(result.spot_number);
+
+    // Now actually record the exit
+    await Api.markExit(data.licensePlate);
+
+    setMessage("Exit recorded — bill is ready.");
+    loadSpots();
+  } catch (err) {
+    setError(err.message);
   }
+}
 
   return (
     <div className="panel">

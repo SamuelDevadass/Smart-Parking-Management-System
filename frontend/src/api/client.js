@@ -41,10 +41,10 @@ export const Api = {
 
   getCentreForWing: async (wing) => {
     const data = await request(
-      `/wings/${encodeURIComponent(wing)}/centre`
+      `/wings/${encodeURIComponent(wing)}/centre_id`
     );
 
-    return data.centre;
+    return data.centre_id;
   },
 
   // ============================================================
@@ -95,11 +95,11 @@ getSpotAvailability: (wing) =>
   // ============================================================
 
   getVehicle: async (licensePlate) => {
-    const data = await request(
-      `/vehicles/${encodeURIComponent(licensePlate)}`
-    );
+      const data = await request(
+          `/vehicles/${encodeURIComponent(licensePlate)}`
+      );
 
-    return data.vehicle_details;
+      return data.vehicle_details;
   },
 
   saveVehicle: async (payload) => {
@@ -142,7 +142,7 @@ getSpotAvailability: (wing) =>
 
   markExit: async (payload) => {
     const data = await request("/exits", {
-      method: "POST",
+      method: "PUT",
       body: JSON.stringify(payload),
     });
 

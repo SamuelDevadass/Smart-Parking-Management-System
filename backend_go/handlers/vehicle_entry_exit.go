@@ -38,7 +38,20 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		Method:      http.MethodPost,
 		Path:        "/api/vehicles",
 	}, func(ctx context.Context, input *models.SaveVehicleInput) (*models.SaveVehicleResponse, error) {
-		status, err := repositories.SaveVehicle(ctx, &input.Body.VehicleDetails, input.Body.LicensePlate)
+		vehicle := &models.VehicleDetails{
+			OwnerID: input.Body.OwnerID,
+			Model:   input.Body.Model,
+			Colour:  input.Body.Colour,
+			Type:    input.Body.Type,
+			Phone:   input.Body.Phone,
+			Name:    input.Body.Name,
+		}
+
+		status, err := repositories.SaveVehicle(
+			ctx,
+			vehicle,
+			input.Body.LicensePlate,
+		)
 		if err != nil || status != true {
 			log.Println("Failed to save vehicle details \n", err)
 			return nil, huma.Error500InternalServerError("Failed to save vehicle details")
@@ -110,11 +123,22 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		}
 
 		exitTime := time.Now()
-		entryTime := session.Body.EntryTime // Adjust based on your session model structure
+		entryTime := session.Body.EntryTime
 
-		// Go-specific time handling
 		duration := exitTime.Sub(entryTime)
 		amount := services.CalculateBillAmount(duration.Seconds(), vehicleType)
+
+		// Put the calculated/session values into the input
+		// before sending it to the repository.
+		input.Body.EntryTime = entryTime
+		input.Body.ExitTime = exitTime
+		input.Body.Duration = duration.String()
+		input.Body.Amount = float32(amount)
+
+		input.Body.CentreID = session.Body.CentreID
+		input.Body.Wing = session.Body.Wing
+		input.Body.Floor = session.Body.Floor
+		input.Body.SpotNumber = session.Body.SpotNumber
 
 		status, err := repositories.RecordExit(ctx, input)
 		if err != nil || !status {

@@ -2,11 +2,13 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"api.com/models"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -195,27 +197,64 @@ func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time tim
 // Get Active Session
 func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}
-	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
-                        		FROM parking_log WHERE license_number = $1 
-                        		AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`, input.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID,
-		&resp.Body.Wing, &resp.Body.Floor, &resp.Body.SpotNumber)
+
+	err := DB.QueryRow(ctx, `
+        SELECT entry_time, centre_id, wing, floor, spot_number
+        FROM parking_log
+        WHERE license_number = $1
+          AND exit_time IS NULL
+        ORDER BY entry_time DESC
+        LIMIT 1`,
+		input.LicensePlate,
+	).Scan(
+		&resp.Body.EntryTime,
+		&resp.Body.CentreID,
+		&resp.Body.Wing,
+		&resp.Body.Floor,
+		&resp.Body.SpotNumber,
+	)
+
+	// No active session is a normal "not found" condition.
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
 	if err != nil {
-		log.Println("Error fetching session details\n", err)
+		log.Println("Error fetching session details:", err)
 		return nil, err
 	}
+
 	return resp, nil
 }
 
 func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}
-	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
-                        		FROM parking_log WHERE license_number = $1 
-                        		AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`, input.Body.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID,
-		&resp.Body.Wing, &resp.Body.Floor, &resp.Body.SpotNumber)
+
+	err := DB.QueryRow(ctx, `
+        SELECT entry_time, centre_id, wing, floor, spot_number
+        FROM parking_log
+        WHERE license_number = $1
+          AND exit_time IS NULL
+        ORDER BY entry_time DESC
+        LIMIT 1`,
+		input.Body.LicensePlate,
+	).Scan(
+		&resp.Body.EntryTime,
+		&resp.Body.CentreID,
+		&resp.Body.Wing,
+		&resp.Body.Floor,
+		&resp.Body.SpotNumber,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
 	if err != nil {
-		log.Println("Error fetching session details\n", err)
+		log.Println("Error fetching session details:", err)
 		return nil, err
 	}
+
 	return resp, nil
 }
 

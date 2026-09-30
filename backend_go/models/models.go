@@ -64,8 +64,13 @@ type GetVehicleResponse struct {
 // -----------------VehicleEntryExit:save-vehicle-------------------
 type SaveVehicleInput struct {
 	Body struct {
-		LicensePlate   string         `json:"license_plate" doc:"License Number"`
-		VehicleDetails VehicleDetails `json:"vehicle_details"`
+		LicensePlate string `json:"license_plate" doc:"License Number"`
+		OwnerID      string `json:"owner_id" doc:"Owner ID"`
+		Model        string `json:"model" doc:"Vehicle model"`
+		Colour       string `json:"colour" doc:"Vehicle colour"`
+		Type         string `json:"type" doc:"Vehicle type"`
+		Phone        string `json:"phone" doc:"Owner phone number"`
+		Name         string `json:"name" doc:"Owner name"`
 	}
 }
 type SaveVehicleResponse struct {
