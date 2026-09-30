@@ -9,7 +9,11 @@ type GetWingsResponse struct {
 	}
 }
 type WingInput struct {
-	Wing string `path:"wing" doc:"Wing name to get its centre id"`
+	Wing string `query:"wing" doc:"Wing name to get its centre id"`
+}
+
+type WingPathInput struct {
+	Wing string `path:"wing" doc:"Wing name"`
 }
 type GetCentreForWingsResponse struct {
 	Body struct {

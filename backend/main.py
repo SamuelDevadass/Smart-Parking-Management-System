@@ -13,7 +13,8 @@ app = FastAPI(title="Smart Parking Management System API")
 # so the browser blocks the frontend's fetch() calls unless we explicitly
 # allow it here. In production, tighten allow_origins to your real domain.
 app.add_middleware(CORSMiddleware,
-                    allow_origins=[f"{os.getenv("FRONTEND_URL")}"],
+                    #allow_origins=[f"{os.getenv("FRONTEND_URL")}"],
+                    allow_origins=["http://127.27.27.27:8000"],
                     allow_methods=["*"],
                     allow_headers=["*"],)
 

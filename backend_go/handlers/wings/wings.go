@@ -38,7 +38,7 @@ func RegisterHandler(api huma.API) {
 		OperationID: "get-centre-id-for-wing",
 		Method:      http.MethodGet,
 		Path:        "/api/wings/{wing}/centre",
-	}, func(ctx context.Context, input *models.WingInput) (*models.GetCentreForWingsResponse, error) { // FIX 1: Removed invalid '{}' from type parameter
+	}, func(ctx context.Context, input *models.WingPathInput) (*models.GetCentreForWingsResponse, error) { // FIX 1: Removed invalid '{}' from type parameter
 
 		// Access the bound structural field string value
 		centre_id, err := repositories.GetCentreForWings(ctx, input.Wing)

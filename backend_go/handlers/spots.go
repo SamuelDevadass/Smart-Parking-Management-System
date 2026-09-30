@@ -16,7 +16,7 @@ func RegisterSpotHandler(api huma.API) {
 	huma.Register(api, huma.Operation{
 		OperationID: "get-spot-availability",
 		Method:      http.MethodGet,
-		Path:        "/api/{wing}/spots/availability",
+		Path:        "/api/spots/availability",
 	}, func(ctx context.Context, input *models.WingInput) (*models.GetSpotAvailabilityResponse, error) {
 		spots, err := repositories.GetSpotAvailability(ctx, input.Wing)
 		if err != nil {
