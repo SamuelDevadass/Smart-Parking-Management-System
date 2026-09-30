@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"api.com/models"
@@ -21,6 +22,7 @@ func RegisterDetectionHandler(api huma.API) {
 	}, func(ctx context.Context, input *struct{}) (*models.StartDetectionResponse, error) {
 		resp, err := http.Post(pythonBaseURL+"/api/detection/start", "application/json", nil)
 		if err != nil {
+			log.Println("Failed to start deteection\n", err)
 			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))
 		}
 		defer resp.Body.Close()
@@ -43,6 +45,7 @@ func RegisterDetectionHandler(api huma.API) {
 	}, func(ctx context.Context, input *struct{}) (*models.DetectionStatusResponse, error) {
 		resp, err := http.Get(pythonBaseURL + "/api/detection/status")
 		if err != nil {
+			log.Println("Unable to start OCR Engine\n", err)
 			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))
 		}
 		defer resp.Body.Close()
