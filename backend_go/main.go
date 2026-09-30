@@ -75,6 +75,9 @@ func main() {
 	/*each handler must have a unique register function otherwise go wont allow
 	you to have multiple files with same function name*/
 	handlers.RegisterSpotHandler(api)
+
+	//reverse proxy detection router
+	handlers.RegisterDetectionHandler(api)
 	handlers.RegisterVehicleEntryExitHandler(api)
 	handlers.RegisterBillsHandler(api)
 

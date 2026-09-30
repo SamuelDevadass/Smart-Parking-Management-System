@@ -152,3 +152,24 @@ type GetLatestBillResponse struct {
 		OwnerName string          `json:"owner_name" doc:"Owner's name"`
 	}
 }
+
+// -----------------Detection:start-detection-------------------
+type StartDetectionResponse struct {
+	Body struct {
+		Ok bool `json:"ok" doc:"Indicates if detection started successfully"`
+	}
+}
+
+type DetectionStatusResponse struct {
+	Body struct {
+		Status       string `json:"status"`
+		LicensePlate string `json:"license_plate"`
+		FolderPath   string `json:"folder_path"`
+	}
+}
+
+type StopDetectionResponse struct {
+	Body struct {
+		Ok bool `json:"ok"`
+	}
+}
