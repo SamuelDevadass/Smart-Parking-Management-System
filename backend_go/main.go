@@ -80,6 +80,7 @@ func main() {
 	handlers.RegisterDetectionHandler(api)
 	handlers.RegisterVehicleEntryExitHandler(api)
 	handlers.RegisterBillsHandler(api)
+	handlers.RegisterVideoHandler(r)
 
 	// 5. LISTEN AND SERVE
 	log.Printf("Server running on http://%s", backend_url)
