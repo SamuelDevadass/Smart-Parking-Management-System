@@ -49,14 +49,13 @@ func RegisterDetectionHandler(api huma.API) {
 			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))
 		}
 		defer resp.Body.Close()
-
+		//_state dict
 		var statusData struct {
 			Status       string `json:"status"`
 			LicensePlate string `json:"license_plate"`
 			FolderPath   string `json:"folder_path"`
 		}
 		json.NewDecoder(resp.Body).Decode(&statusData)
-
 		response := &models.DetectionStatusResponse{}
 		response.Body.Status = statusData.Status
 		response.Body.LicensePlate = statusData.LicensePlate
@@ -72,6 +71,7 @@ func RegisterDetectionHandler(api huma.API) {
 	}, func(ctx context.Context, input *struct{}) (*models.StopDetectionResponse, error) {
 		resp, err := http.Post(pythonBaseURL+"/api/detection/stop", "application/json", nil)
 		if err != nil {
+			log.Println("Unable to start OCR Engine\n", err)
 			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))
 		}
 		defer resp.Body.Close()

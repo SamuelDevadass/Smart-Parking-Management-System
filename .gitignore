@@ -39,3 +39,5 @@ ideas.txt
 image.png
 image-*/*.png
 
+backend/capture_log/
+
