@@ -68,9 +68,14 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		Path:        "/api/entries",
 	}, func(ctx context.Context, input *models.MarkEntryInput) (*models.MarkEntryResonse, error) {
 		now := time.Now()
-		status, err := repositories.MarkEntry(ctx, input, now)
-		if err != nil || status != true {
-			log.Println("Failed to mark entry \n", err)
+		status, err := services.GetDetectionStatus()
+		if err != nil {
+			return nil, huma.Error500InternalServerError("Failed to fetch detection status")
+		}
+		input.Body.FolderPath = services.CreateFolderPath(input.Body.LicensePlate, status.FolderPath)
+		status_py, err_py := repositories.MarkEntry(ctx, input, now)
+		if err_py != nil || status_py != true {
+			log.Println("Failed to mark entry \n", err_py)
 			return nil, huma.Error500InternalServerError("Failed to mark entry")
 		}
 		resp := &models.MarkEntryResonse{}

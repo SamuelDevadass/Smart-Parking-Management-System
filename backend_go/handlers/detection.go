@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"api.com/models"
+	"api.com/services"
 	"github.com/danielgtaylor/huma/v2"
 )
 
@@ -43,23 +44,18 @@ func RegisterDetectionHandler(api huma.API) {
 		Method:      http.MethodGet,
 		Path:        "/api/detection/status",
 	}, func(ctx context.Context, input *struct{}) (*models.DetectionStatusResponse, error) {
-		resp, err := http.Get(pythonBaseURL + "/api/detection/status")
+		status, err := services.GetDetectionStatus()
 		if err != nil {
-			log.Println("Unable to start OCR Engine\n", err)
-			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))
+			log.Println("Unable to reach OCR service:", err)
+			return nil, huma.Error500InternalServerError(
+				fmt.Sprintf("Failed to reach OCR service: %v", err),
+			)
 		}
-		defer resp.Body.Close()
-		//_state dict
-		var statusData struct {
-			Status       string `json:"status"`
-			LicensePlate string `json:"license_plate"`
-			FolderPath   string `json:"folder_path"`
-		}
-		json.NewDecoder(resp.Body).Decode(&statusData)
 		response := &models.DetectionStatusResponse{}
-		response.Body.Status = statusData.Status
-		response.Body.LicensePlate = statusData.LicensePlate
-		response.Body.FolderPath = statusData.FolderPath
+		response.Body.Status = status.Status
+		response.Body.LicensePlate = status.LicensePlate
+		response.Body.FolderPath = status.FolderPath
+
 		return response, nil
 	})
 
