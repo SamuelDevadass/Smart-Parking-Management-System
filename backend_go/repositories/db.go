@@ -230,21 +230,11 @@ func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (*mode
 func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}
 
-	err := DB.QueryRow(ctx, `
-        SELECT entry_time, centre_id, wing, floor, spot_number
-        FROM parking_log
-        WHERE license_number = $1
-          AND exit_time IS NULL
-        ORDER BY entry_time DESC
-        LIMIT 1`,
-		input.Body.LicensePlate,
-	).Scan(
-		&resp.Body.EntryTime,
-		&resp.Body.CentreID,
-		&resp.Body.Wing,
-		&resp.Body.Floor,
-		&resp.Body.SpotNumber,
-	)
+	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
+        						FROM parking_log WHERE license_number = $1 
+          						AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`,
+		input.Body.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID, &resp.Body.Wing,
+		&resp.Body.Floor, &resp.Body.SpotNumber)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -275,19 +265,25 @@ func GetvehicleType(ctx context.Context, license_plate string) (string, error) {
 // record details
 // Mark Entry Input, Get Latest Bill Response
 func RecordExit(ctx context.Context, details *models.RecordExitDetails) (bool, error) {
-	_, err := DB.Exec(ctx, `UPDATE parking_log
-                        	SET exit_time = $1, duration = $2, amount = $3
-                        	WHERE entry_time = $4 AND exit_time IS NULL`, details.ExitTime, details.Duration, details.Amount, details.EntryTime)
+	_, err := DB.Exec(ctx, `UPDATE parking_log SET exit_time = $1,
+		    				duration = $2::interval, amount = $3 WHERE entry_time = $4
+		  					AND exit_time IS NULL`,
+		details.ExitTime, details.Duration, details.Amount, details.EntryTime)
+
 	if err != nil {
 		log.Println("Error updating exit records\n", err)
 		return false, err
 	}
+
 	_, err = DB.Exec(ctx, `UPDATE has_parking_spot SET availability = True
-                        	WHERE centre_id = $1 AND wing = $2 AND floor = $3 AND spot_number = $4`, details.CentreID, details.Wing, details.Floor, details.SpotNumber)
+							WHERE centre_id = $1 AND wing = $2 AND floor = $3 AND spot_number = $4`,
+		details.CentreID, details.Wing, details.Floor, details.SpotNumber)
+
 	if err != nil {
 		log.Println("Error updating spot availability records\n", err)
 		return false, err
 	}
+
 	return true, nil
 }
 
@@ -295,35 +291,20 @@ func RecordExit(ctx context.Context, details *models.RecordExitDetails) (bool, e
 func GetLatestBill(ctx context.Context, input *models.GetLicensePlate) (*models.GetLatestBillResponse, error) {
 	resp := &models.GetLatestBillResponse{}
 
-	err := DB.QueryRow(ctx, `
-		SELECT entry_time,
-		       exit_time,
-		       duration::text,
-		       amount
-		FROM parking_log
-		WHERE license_number = $1
-		  AND exit_time IS NOT NULL
-		ORDER BY exit_time DESC
-		LIMIT 1`,
-		input.LicensePlate,
-	).Scan(
-		&resp.Body.EntryTime,
-		&resp.Body.ExitTime,
-		&resp.Body.Duration,
-		&resp.Body.Amount,
-	)
+	err := DB.QueryRow(ctx, `SELECT entry_time, exit_time, duration::text, amount
+								FROM parking_log WHERE license_number = $1 
+								AND exit_time IS NOT NULL ORDER BY exit_time DESC LIMIT 1`,
+		input.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.ExitTime,
+		&resp.Body.Duration, &resp.Body.Amount)
 
 	if err != nil {
 		log.Println("Error fetching bill details\n", err)
 		return nil, err
 	}
 
-	err = DB.QueryRow(ctx, `
-		SELECT o.name
-		FROM owner o
-		JOIN owns_vehicle v ON v.owner_id = o.owner_id
-		WHERE v.license_number = $1`,
-		input.LicensePlate,
+	err = DB.QueryRow(ctx, `SELECT o.name FROM owner o 
+							JOIN owns_vehicle v ON v.owner_id = o.owner_id
+							WHERE v.license_number = $1`, input.LicensePlate,
 	).Scan(&resp.Body.OwnerName)
 
 	if err != nil {
