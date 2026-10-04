@@ -40,4 +40,5 @@ image.png
 image-*/*.png
 
 backend/capture_log/
+backend_go/capture_log/
 
