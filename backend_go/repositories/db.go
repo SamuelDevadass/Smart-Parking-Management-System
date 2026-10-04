@@ -24,7 +24,9 @@ func Init_DB(ctx context.Context, connection_string string) {
 	fmt.Println("CONNECTION POOL READY")
 }
 
-// --------------------------LIST WINGS-------------------------------------------
+// --------------------------WINGS-------------------------------------------
+
+// ----------------get-wings--------------------
 func ListWings(ctx context.Context) (
 	[]string, error) {
 	var result []string
@@ -48,8 +50,9 @@ func ListWings(ctx context.Context) (
 	return result, nil
 }
 
-// -----------------------GET CENTRE-ID FOR WING-------------------------
-func GetCentreForWings(ctx context.Context, wing string) (int, error) {
+// ----------------get-centre-id-for-wing--------------------
+func GetCentreForWings(ctx context.Context, wing string) (
+	int, error) {
 	var centre int = 0
 	err := DB.QueryRow(ctx, `SELECT centre_id FROM has_wing_floor 
 										WHERE wing = ($1)`, wing).Scan(&centre)
@@ -59,8 +62,11 @@ func GetCentreForWings(ctx context.Context, wing string) (int, error) {
 	return centre, err
 }
 
-// ------------------------------GET SPOT AVAILABILITY-------------------------------
-func GetSpotAvailability(ctx context.Context, wing string) (map[string]int, error) {
+// --------------------------SPOTS-------------------------------------------
+
+// ----------------get-spot-availability--------------------
+func GetSpotAvailability(ctx context.Context, wing string) (
+	map[string]int, error) {
 	spots_map_dict := make(map[string]int)
 	var total_spots, free_spots int = 0, 0
 	/*err := DB.QueryRow(ctx, `SELECT COUNT(*) AS total_spots_two_wheeler,
@@ -93,12 +99,12 @@ func GetSpotAvailability(ctx context.Context, wing string) (map[string]int, erro
 	}
 	spots_map_dict["total_spots_four_wheeler"] = total_spots
 	spots_map_dict["free_spots_four_wheeler"] = free_spots
-
 	return spots_map_dict, nil
 }
 
-// -----------------------------------GET AVAILABLE SPOTS--------------------------------------------------------------
-func GetAvailableSpots(ctx context.Context, wing string, centre_id int, size string) ([]map[string]string, error) {
+// ----------------get-available-spots--------------------
+func GetAvailableSpots(ctx context.Context, wing string, centre_id int, size string) (
+	[]map[string]string, error) {
 	var floor, spot_number, size_r string
 	var result []map[string]string
 
@@ -127,8 +133,11 @@ func GetAvailableSpots(ctx context.Context, wing string, centre_id int, size str
 	return result, nil
 }
 
-// ---------------GET VEHICLE--------------
-func GetVehicle(ctx context.Context, license_plate string) (*models.VehicleDetails, error) {
+// --------------------------VEHICLE_ENTRY_EXIT-------------------------------------------
+
+// ----------------get-vehicle--------------------
+func GetVehicle(ctx context.Context, license_plate string) (
+	*models.VehicleDetails, error) {
 	var vehicle models.VehicleDetails
 	err := DB.QueryRow(ctx, `SELECT owner_id, model, colour, type
                         		FROM owns_vehicle WHERE license_number = $1`,
@@ -137,13 +146,11 @@ func GetVehicle(ctx context.Context, license_plate string) (*models.VehicleDetai
 		log.Println("Query failed to fetch Vehicle Details\n", err)
 		return nil, err
 	}
-
 	err = DB.QueryRow(ctx, `SELECT phone FROM owner_phone WHERE owner_id = $1 LIMIT 1`, vehicle.OwnerID).Scan(&vehicle.Phone)
 	if err != nil {
 		log.Println("Query failed to fetch User Phone\n", err)
 		return nil, err
 	}
-
 	err = DB.QueryRow(ctx, `SELECT name FROM owner WHERE owner_id = $1 LIMIT 1`, vehicle.OwnerID).Scan(&vehicle.Name)
 	if err != nil {
 		log.Println("Query failed to fetch User Phone\n", err)
@@ -152,7 +159,9 @@ func GetVehicle(ctx context.Context, license_plate string) (*models.VehicleDetai
 	return &vehicle, nil
 }
 
-func SaveVehicle(ctx context.Context, vehicle *models.VehicleDetails, license_plate string) (bool, error) {
+// ----------------save-vehicle--------------------
+func SaveVehicle(ctx context.Context, vehicle *models.VehicleDetails, license_plate string) (
+	bool, error) {
 	_, err := DB.Exec(ctx, `INSERT INTO owner (owner_id, name) VALUES ($1, $2)
                         		ON CONFLICT (owner_id) DO NOTHING`, vehicle.OwnerID, vehicle.Name)
 	if err != nil {
@@ -175,8 +184,9 @@ func SaveVehicle(ctx context.Context, vehicle *models.VehicleDetails, license_pl
 	return true, nil
 }
 
-// Mark Entry
-func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time time.Time) (bool, error) {
+// ----------------mark-entry--------------------
+func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time time.Time) (
+	bool, error) {
 	_, err := DB.Exec(ctx, `INSERT INTO parking_log 
 							(entry_time,license_number, centre_id, 
                      		wing, floor, spot_number, image_folder_path)
@@ -195,8 +205,9 @@ func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time tim
 	return true, nil
 }
 
-// Get Active Session
-func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (*models.GetActiveSessionResponse, error) {
+// ----------------helper--------------------
+func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (
+	*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}
 
 	err := DB.QueryRow(ctx, `
