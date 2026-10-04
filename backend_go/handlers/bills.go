@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"fmt" // Added for missing case error checks
+	"fmt"
 	"log"
 	"net/http"
 
@@ -12,11 +12,13 @@ import (
 )
 
 func RegisterBillsHandler(api huma.API) {
+	//-------------------Get-Latest-Bill-----------------------------
 	huma.Register(api, huma.Operation{
 		OperationID: "get-latest-bill",
 		Method:      http.MethodGet,
 		Path:        "/api/bills/{license_plate}/latest",
-	}, func(ctx context.Context, input *models.GetLicensePlate) (*models.GetLatestBillResponse, error) {
+	}, func(ctx context.Context, input *models.GetLicensePlate) (
+		*models.GetLatestBillResponse, error) {
 		ans, err := repositories.GetLatestBill(ctx, input)
 		if err != nil {
 			log.Println("Failed to fetch vehicle details \n", err)

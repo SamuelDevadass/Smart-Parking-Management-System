@@ -25,6 +25,7 @@ def save_vehicle(payload: VehiclePayload):
 
 @router.post("/api/entries")
 def mark_entry(payload: EntryPayload):
+    # Create a structured path for final storage of images
     folder_path = create_folder_path(payload.license_plate)
     db.mark_entry(entry_time=datetime.now(),
                     license_plate=payload.license_plate, centre_id=payload.centre_id,
@@ -44,6 +45,7 @@ def get_spot_details(license_plate: str):
 
 @router.post("/api/exits")
 def mark_exit(payload: ExitPayload):
+    # Create a structured path for final storage of images
     _ = create_folder_path(payload.license_plate)
     session = db.get_active_session(payload.license_plate)
     if session is None:

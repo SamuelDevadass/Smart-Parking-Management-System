@@ -24,8 +24,9 @@ func Init_DB(ctx context.Context, connection_string string) {
 	fmt.Println("CONNECTION POOL READY")
 }
 
-// -------------------LIST WINGS------------------------
-func ListWings(ctx context.Context) ([]string, error) {
+// --------------------------LIST WINGS-------------------------------------------
+func ListWings(ctx context.Context) (
+	[]string, error) {
 	var result []string
 	var value string
 	rows, err := DB.Query(ctx, `SELECT DISTINCT wing FROM has_wing_floor`)

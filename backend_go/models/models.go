@@ -1,10 +1,14 @@
 package models
 
+//See wings for wings models
 import (
 	"time"
 )
 
 // -----------------Spots:get-spot-availability-------------------
+type WingInput struct {
+	Wing string `query:"wing" doc:"Wing name to get its centre id"`
+}
 type GetSpotAvailabilityResponse struct {
 	Body struct {
 		Message               string `json:"message" doc:"Status Message"`
@@ -118,13 +122,11 @@ type GetSpotDetailsResponse struct {
 }
 
 // -----------------VehicleEntryExit:mark-exit-------------------
-
 type MarkExitInput struct {
 	Body struct {
 		LicensePlate string `json:"license_plate"`
 	}
 }
-
 type RecordExitDetails struct {
 	EntryTime  time.Time
 	ExitTime   time.Time
@@ -135,7 +137,6 @@ type RecordExitDetails struct {
 	Floor      string
 	SpotNumber string
 }
-
 type MarkExitResponse struct {
 	Body struct {
 		Message   string    `json:"message" doc:"Message"`
@@ -174,6 +175,7 @@ type DetectionStatusResponse struct {
 	}
 }
 
+// -----------------Detection:stop-detection-------------------
 type StopDetectionResponse struct {
 	Body struct {
 		Ok bool `json:"ok"`

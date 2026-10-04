@@ -15,35 +15,36 @@ import (
 const pythonBaseURL = "http://localhost:8001"
 
 func RegisterDetectionHandler(api huma.API) {
-	// 1. POST /api/detection/start
+
+	//-------------------Start-Detection-----------------------------
 	huma.Register(api, huma.Operation{
 		OperationID: "start-detection",
 		Method:      http.MethodPost,
 		Path:        "/api/detection/start",
-	}, func(ctx context.Context, input *struct{}) (*models.StartDetectionResponse, error) {
+	}, func(ctx context.Context, input *struct{}) (
+		*models.StartDetectionResponse, error) {
 		resp, err := http.Post(pythonBaseURL+"/api/detection/start", "application/json", nil)
 		if err != nil {
 			log.Println("Failed to start deteection\n", err)
 			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))
 		}
 		defer resp.Body.Close()
-
 		var pyResp struct {
 			Ok bool `json:"ok"`
 		}
 		json.NewDecoder(resp.Body).Decode(&pyResp)
-
 		response := &models.StartDetectionResponse{}
 		response.Body.Ok = pyResp.Ok
 		return response, nil
 	})
 
-	// 2. GET /api/detection/status
+	//-------------------Detection-Status-----------------------------
 	huma.Register(api, huma.Operation{
 		OperationID: "detection-status",
 		Method:      http.MethodGet,
 		Path:        "/api/detection/status",
-	}, func(ctx context.Context, input *struct{}) (*models.DetectionStatusResponse, error) {
+	}, func(ctx context.Context, input *struct{}) (
+		*models.DetectionStatusResponse, error) {
 		status, err := services.GetDetectionStatus()
 		if err != nil {
 			log.Println("Unable to reach OCR service:", err)
@@ -55,28 +56,26 @@ func RegisterDetectionHandler(api huma.API) {
 		response.Body.Status = status.Status
 		response.Body.LicensePlate = status.LicensePlate
 		response.Body.FolderPath = status.FolderPath
-
 		return response, nil
 	})
 
-	// 3. POST /api/detection/stop
+	//-------------------Stop-Detection-----------------------------
 	huma.Register(api, huma.Operation{
 		OperationID: "stop-detection",
 		Method:      http.MethodPost,
 		Path:        "/api/detection/stop",
-	}, func(ctx context.Context, input *struct{}) (*models.StopDetectionResponse, error) {
+	}, func(ctx context.Context, input *struct{}) (
+		*models.StopDetectionResponse, error) {
 		resp, err := http.Post(pythonBaseURL+"/api/detection/stop", "application/json", nil)
 		if err != nil {
 			log.Println("Unable to start OCR Engine\n", err)
 			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))
 		}
 		defer resp.Body.Close()
-
 		var pyResp struct {
 			Ok bool `json:"ok"`
 		}
 		json.NewDecoder(resp.Body).Decode(&pyResp)
-
 		response := &models.StopDetectionResponse{}
 		response.Body.Ok = pyResp.Ok
 		return response, nil
