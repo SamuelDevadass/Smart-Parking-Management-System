@@ -60,6 +60,11 @@ class LicensePlateDetection:
         self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S") # os.mkdir() returns None hence create path as string and then create folder
         os.mkdir(self.folder_path)
 
+    """Instead of creating final folder path somewhere else later
+        Create it here itself so the image is always at the 
+        correct place no matter what"""
+    """Cant do it because we need the final license plate from the frontend"""
+
     def video_capture_with_yolo(self, stop_event = None):
         """CAPTURE LIVE FEED"""
         print("Live video stream active. Press 'q' inside the window to exit.")

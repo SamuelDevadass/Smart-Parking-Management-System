@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 )
 
 const pythonBaseURL = "http://localhost:8001"
+const detectionBasePath = `C:\Users\Samuel\Desktop\SAM\CODING\PYTHON\LicensePlateRecognition\License-Plate-Detector\backend`
 
 type DetectionStatus struct {
 	Status       string `json:"status"`
@@ -19,15 +21,30 @@ type DetectionStatus struct {
 }
 
 func GetDetectionStatus() (*DetectionStatus, error) {
-	resp, err := http.Get(pythonBaseURL + "/api/detection/status")
+	url := pythonBaseURL + "/api/detection/status"
+
+	log.Println("Calling Python detection service:", url)
+
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	var status DetectionStatus
-	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
-		return nil, err
+
+	log.Println("Python response status:", resp.Status)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("python detection service returned %s", resp.Status)
 	}
+
+	var status DetectionStatus
+
+	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
+		return nil, fmt.Errorf("failed to decode detection response: %w", err)
+	}
+
+	log.Printf("Detection status received: %+v\n", status)
+
 	return &status, nil
 }
 
@@ -36,16 +53,30 @@ func CreateFolderPath(license_plate string, folder_path string) string {
 		log.Println("Error fetching detection status")
 		return ""
 	}
+
+	// Python gives us something like:
+	// scans/2026-10-01_16-56-38
+	// Make it relative to the Python detection service.
+	sourcePath := filepath.Join(detectionBasePath, folder_path)
+
 	date := time.Now().Format("02-01-2006")
 	currentTime := time.Now().Format("15-04-05")
-	vehiclePath := filepath.Join("capture_log", date, license_plate+"_"+currentTime)
+
+	vehiclePath := filepath.Join(
+		"capture_log",
+		date,
+		license_plate+"_"+currentTime,
+	)
 
 	if err := os.MkdirAll(vehiclePath, 0755); err != nil {
 		log.Println("Error creating capture directory:", err)
 		return ""
 	}
 
-	if err := copyDir(folder_path, vehiclePath); err != nil {
+	log.Println("Copying detection files from:", sourcePath)
+	log.Println("Copying detection files to:", vehiclePath)
+
+	if err := copyDir(sourcePath, vehiclePath); err != nil {
 		log.Println("Error copying capture files:", err)
 		return ""
 	}
