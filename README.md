@@ -3,11 +3,15 @@
 
 | Raspberry PI Version | Local Monolith | Modular Local Monolith | Application | Fullstack Web App | Fullstack Web App with Go | Dockerized Web App | 
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | [![Current](https://img.shields.io/badge/Current-2e7d32?style=for-the-badge)](#) | [![Upcoming](https://img.shields.io/badge/Upcoming-757575?style=for-the-badge)](#) | [![Upcoming](https://img.shields.io/badge/Upcoming-757575?style=for-the-badge)](#) |
+| [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](#) | <br><br>[![Current](https://img.shields.io/badge/Current-2e7d32?style=for-the-badge)](#) <br>Distributed Deployment | [![Upcoming](https://img.shields.io/badge/Upcoming-757575?style=for-the-badge)](#) | 
 
-# FullStack Web Application
+# FullStack Web Application with Go
 
-FULLSTACK WEB APPLICATION WITH FULLY FUNCTIONAL DATABASE AND AUTOMATIC PLATE DETECTION
+<li>FullStack Web Application
+<li>Database Normalized upto BCNF  
+<li>Automatic License Plate Detection
+<li>Revised API Gateway  
+<li>Reverse proxy for AI workloads
 
 ### ARCHITECTURE DIAGRAM
 
@@ -20,25 +24,25 @@ FULLSTACK WEB APPLICATION WITH FULLY FUNCTIONAL DATABASE AND AUTOMATIC PLATE DET
 
 ## FEATURED UPDATES
 
-GUI     : Tkinter --> React + Vite
+API Layer : FastApi + Python --> Golang Huma + Reverse Proxy to FastAPI
 
-Backend : Python --> FastApi + Python
+Database  : Python + psycopg --> Golang + pgx
 
 -----------------------------------------------------------------------------------------------------
 
-## IMPROVEMENTS OVER APPLICATION
+## IMPROVEMENTS OVER FULLSTACK WEB APPLICATION
 
-i. Detection happens in the same window
+i. Create structured folder path ordered by date of capture files and log them in Database
 
-ii. Visual depiction of free and occupied spots
+ii. Added stric type based checking in compliance with standard Go norms
 
-iii. Occupied slot is pre selected while marking exit 
+iii. Auto generated Huma OpenAPI documentation for efficient testing 
 
 -----------------------------------------------------------------------------------------------------
 
 ### DATABASE
 
-Implemented using PostGreSQL and Psycopg
+Implemented using PostGreSQL and PGX with Go
 
 Designed to support organizations with multiple centres, wings, floors and spots
     
@@ -64,19 +68,19 @@ Supports Interactive design for enhanced efficiency
 
 ### BACKEND 
 
-Implemented using FastApi 
+Implemented using Go Huma with Reverse /
 
 Designed to support secure REST APIs for backend endpoints 
 
     Eg: /api/wings
         /api/spots/
-        /api/detection/
+        /api/detection/ --> Reverse Proxy to FastAPI
         /api/vehicles/
         /api/entries/
         /api/exits/
         /api/bills/
-        /api/video/
-Supports Pydantic schemas for better security over HTTP messages
+        /api/video/     --> Reverse Proxy to FastAPI  
+Supports Fixed Input and Response models defined in Go for better security over HTTP messages
 
 ### AUTOMATIC LICENSE PLATE DETECTION
 
@@ -93,7 +97,7 @@ Includes automatic fallbacks with custom image enhancement pipeline against conf
 
 #### Tools and Technologies
 
-PostgreSQL, Psycopg, Tkinter, YOLO, EasyOCR, OpenCV, Pillow, RapidOCR
+PostgreSQL, Pgx, Go Huma, YOLO, EasyOCR, OpenCV, Pillow, RapidOCR
 
 #### CONFIGURATIONS
 
@@ -151,6 +155,24 @@ i. Folder Structure
             -   billing.py
             -   db.py
             -   detection.py
+    +---backend_go/
+        +---catpure_log/
+        +---handlers/   
+            +---wings/
+                -   wings.go
+        -   bills.go
+        -   detection.go
+        -   spots.go
+        -   vehicle_entry_exit.go
+        -   video.go
+        +---models/
+        -   models.go
+        -   wings.go
+        +---repositories/
+        -   db.go
+        +---services/
+        -   billing.go
+        -   detection_status.go
     +---db/
     -   .sql
     -   ER DIAGRAM.jpg
@@ -161,12 +183,14 @@ ii. Environment Variables
     
 Configure following variables to configure the environment:
         
-        DB_NAME = 
-        DB_USER = 
-        DB_PW = 
-        DB_HOST = 
-        FRONTEND_URL = 
-        VITE_BACKEND_URL = 
+        DB_NAME=
+        DB_USER=
+        DB_PW=
+        DB_HOST=
+        FRONTEND_URL=
+        VITE_BACKEND_URL=
+        BACKEND_URL=
+        DB_URL=
 
 iii. Environment Setup
     
@@ -198,7 +222,13 @@ iii. Environment Setup
 
    - Navigate to the backend and run:
 
-    uvicorn main:app --reload --port 8000
+    uvicorn main:app --reload --port 8001
+
+   - Navigate to the backend_go and run:
+
+    go mod tidy
+    go build -o main.exe main.go
+    go run main.go (or ./main.exe)
 
    - Navigate to the frontend and run:
 
