@@ -41,4 +41,7 @@ image-*/*.png
 
 backend/capture_log/
 backend_go/capture_log/
+z_learn_db/
+z_learn_greetings
+z_learn_hello
 
