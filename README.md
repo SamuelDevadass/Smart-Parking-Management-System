@@ -18,6 +18,14 @@
 <img width="982" height="457" alt="image" src="https://github.com/user-attachments/assets/abb04c1d-6a95-4990-8ac3-594ddbcd18b9" />
 
 
+| Component | Tech Stack | Deployed At |
+| :--- | :--- | :--- |
+| **Frontend** | React | Vercel |
+| **API Layer** | Go Huma | Render |
+| **Backend** | Reverse Proxy (Go to FastAPI) | Railway |
+| **Database** | PostgreSQL + PGX | Supabase |
+| **Capture** | Blob Storage | Supabase Blob |       
+
 ## Video Walkthrough
 
 [![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/7mYoQlRec2c)](https://youtu.be/7mYoQlRec2c)
@@ -68,7 +76,7 @@ Supports Interactive design for enhanced efficiency
 
 ### BACKEND 
 
-Implemented using Go Huma with Reverse /
+Implemented using Go Huma with Reverse Proxy to FastAPI
 
 Designed to support secure REST APIs for backend endpoints 
 
@@ -258,8 +266,8 @@ To add only those libraries actually imported in the files run the command:
 
 # CITATION
 
-If you use this project, please credit https://github.com/SamuelDevadass/License-Plate-Detector
+If you use this project, please credit https://github.com/SamuelDevadass/Smart-Parking-Management-System
 
-Citation: [Smart Parking Management System / FullstackWebApplication], Samuel Devadass (2026). 
+Citation: [Smart Parking Management System / FullstackWebApplication_Go], Samuel Devadass (2026). 
 
-Available at: [https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/FullstackWebApplication]
+Available at: [https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/FullstackWebApplication_Go]
