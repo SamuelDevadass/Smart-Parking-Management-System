@@ -1,9 +1,14 @@
+/** Grouped By HANDLER->operation-id
+ */
 package services
 
 import (
 	"math"
 )
 
+// --------------------------VEHICLE_ENTRY_EXIT-------------------------------------------
+
+// ----------------mark-exit--------------------
 func CalculateBillAmount(totalSeconds float64, vehicleType string) float64 {
 	// Calculate total hours using ceiling division and cast to int
 	totalHours := int(math.Ceil(totalSeconds / 3600))

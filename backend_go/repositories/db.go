@@ -1,3 +1,5 @@
+/** Grouped By HANDLER->operation-id
+ */
 package repositories
 
 import (
@@ -205,28 +207,18 @@ func MarkEntry(ctx context.Context, input *models.MarkEntryInput, entry_time tim
 	return true, nil
 }
 
-// ----------------helper--------------------
+// ----------------get-spot-details--------------------
 func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (
 	*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}
 
-	err := DB.QueryRow(ctx, `
-        SELECT entry_time, centre_id, wing, floor, spot_number
-        FROM parking_log
-        WHERE license_number = $1
-          AND exit_time IS NULL
-        ORDER BY entry_time DESC
-        LIMIT 1`,
-		input.LicensePlate,
-	).Scan(
-		&resp.Body.EntryTime,
-		&resp.Body.CentreID,
-		&resp.Body.Wing,
-		&resp.Body.Floor,
-		&resp.Body.SpotNumber,
+	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
+        						FROM parking_log WHERE license_number = $1
+          						AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`,
+		input.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID,
+		&resp.Body.Wing, &resp.Body.Floor, &resp.Body.SpotNumber,
 	)
 
-	// No active session is a normal "not found" condition.
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -239,7 +231,9 @@ func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (
 	return resp, nil
 }
 
-func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (*models.GetActiveSessionResponse, error) {
+// ----------------mark-exit--------------------
+func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (
+	*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}
 
 	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
@@ -247,22 +241,18 @@ func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (
           						AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`,
 		input.Body.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID, &resp.Body.Wing,
 		&resp.Body.Floor, &resp.Body.SpotNumber)
-
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
-
 	if err != nil {
 		log.Println("Error fetching session details:", err)
 		return nil, err
 	}
-
 	return resp, nil
 }
 
-// Helper
-// get vehicle type
-func GetvehicleType(ctx context.Context, license_plate string) (string, error) {
+func GetvehicleType(ctx context.Context, license_plate string) (
+	string, error) {
 	var vehicle_type string
 	err := DB.QueryRow(ctx, `SELECT type FROM owns_vehicle
 						WHERE license_number = $1`, license_plate).Scan(&vehicle_type)
@@ -273,34 +263,28 @@ func GetvehicleType(ctx context.Context, license_plate string) (string, error) {
 	return vehicle_type, nil
 }
 
-// Helper
-// record details
-// Mark Entry Input, Get Latest Bill Response
-func RecordExit(ctx context.Context, details *models.RecordExitDetails) (bool, error) {
+func RecordExit(ctx context.Context, details *models.RecordExitDetails) (
+	bool, error) {
 	_, err := DB.Exec(ctx, `UPDATE parking_log SET exit_time = $1,
 		    				duration = $2::interval, amount = $3 WHERE entry_time = $4
 		  					AND exit_time IS NULL`,
 		details.ExitTime, details.Duration, details.Amount, details.EntryTime)
-
 	if err != nil {
 		log.Println("Error updating exit records\n", err)
 		return false, err
 	}
-
 	_, err = DB.Exec(ctx, `UPDATE has_parking_spot SET availability = True
 							WHERE centre_id = $1 AND wing = $2 AND floor = $3 AND spot_number = $4`,
 		details.CentreID, details.Wing, details.Floor, details.SpotNumber)
-
 	if err != nil {
 		log.Println("Error updating spot availability records\n", err)
 		return false, err
 	}
-
 	return true, nil
 }
 
-// Get latest bill
-func GetLatestBill(ctx context.Context, input *models.GetLicensePlate) (*models.GetLatestBillResponse, error) {
+func GetLatestBill(ctx context.Context, input *models.GetLicensePlate) (
+	*models.GetLatestBillResponse, error) {
 	resp := &models.GetLatestBillResponse{}
 
 	err := DB.QueryRow(ctx, `SELECT entry_time, exit_time, duration::text, amount
