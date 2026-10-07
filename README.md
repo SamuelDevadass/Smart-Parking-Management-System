@@ -52,7 +52,7 @@ iii. Auto generated Huma OpenAPI documentation for efficient testing
 
 Normalized upto BCNF
 
-Deployed to SupaBase
+Deployed to SupaBase, existed data exported to SupaBase DB
 
 Implemented using PostGreSQL and PGX with Go
 
