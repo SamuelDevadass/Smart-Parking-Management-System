@@ -50,6 +50,10 @@ iii. Auto generated Huma OpenAPI documentation for efficient testing
 
 ### DATABASE
 
+Normalized upto BCNF
+
+Deployed to SupaBase
+
 Implemented using PostGreSQL and PGX with Go
 
 Designed to support organizations with multiple centres, wings, floors and spots
