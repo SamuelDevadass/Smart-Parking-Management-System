@@ -30,7 +30,8 @@ func main() {
 		log.Fatalf("Failed to load env...\nError: %v", err)
 	}
 	backend_url := os.Getenv("BACKEND_URL")
-	connection_string := os.Getenv("DB_URL")
+	//connection_string := os.Getenv("DB_URL")
+	connection_string := os.Getenv("DB_URL_SUPABASE")
 
 	//Initialize connection to DB
 	log.Println("Initializing DB ...")
