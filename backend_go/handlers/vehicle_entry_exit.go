@@ -10,10 +10,12 @@ import (
 	"api.com/models"
 	"api.com/repositories"
 	"api.com/services"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/danielgtaylor/huma/v2"
 )
 
-func RegisterVehicleEntryExitHandler(api huma.API) {
+func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
+	bucket_name string) {
 
 	//-------------------Get-Vehicle------------------------------
 	huma.Register(api, huma.Operation{
@@ -72,7 +74,7 @@ func RegisterVehicleEntryExitHandler(api huma.API) {
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Failed to fetch detection status")
 		}
-		input.Body.FolderPath = services.CreateFolderPath(input.Body.LicensePlate, status.FolderPath)
+		input.Body.FolderPath = services.CreateFolderPath(ctx, input.Body.LicensePlate, status.FolderPath, s3_client, bucket_name)
 		status_py, err_py := repositories.MarkEntry(ctx, input, now)
 		if err_py != nil || status_py != true {
 			log.Println("Failed to mark entry \n", err_py)

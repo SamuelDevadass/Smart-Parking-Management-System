@@ -3,6 +3,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +12,9 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"api.com/services"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 const pythonBaseURL = "http://localhost:8001"
@@ -46,7 +50,8 @@ func GetDetectionStatus() (*DetectionStatus, error) {
 	return &status, nil
 }
 
-func CreateFolderPath(license_plate string, folder_path string) string {
+func CreateFolderPath(ctx context.Context, license_plate string, folder_path string,
+	s3_client *s3.Client, bucket_name string) string {
 	if folder_path == "" || license_plate == "" {
 		log.Println("Error fetching detection status")
 		return ""
@@ -71,6 +76,8 @@ func CreateFolderPath(license_plate string, folder_path string) string {
 		log.Println("Error copying capture files:", err)
 		return ""
 	}
+	log.Println("Attempting to upload to Blob...")
+	status, err := services.Upload(ctx, s3_client)
 	return vehiclePath
 }
 
