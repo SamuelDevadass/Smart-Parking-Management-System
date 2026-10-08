@@ -21,7 +21,7 @@
 | Component | Tech Stack | Deployed At |
 | :--- | :--- | :--- |
 | **Frontend** | React | Vercel |
-| **API Layer** | Go Huma | Render |
+| **API Layer** | Go Huma | Railway |
 | **Backend** | Reverse Proxy (Go to FastAPI) | Railway |
 | **Database** | PostgreSQL + PGX | Supabase |
 | **Capture** | Blob Storage | Supabase Blob |       
