@@ -61,3 +61,11 @@ For get methods a Body struct tag is not necessary but for post or put methods a
 For request bodies (POST, PUT, PATCH): Huma looks specifically for a field named Body to map the incoming JSON payload. If you don't name it Body (or if you leave it flat at the top level), Huma assumes those fields are meant to come from the URL query string or path parameters instead, which is why nothing showed up in the JSON body section of your Swagger docs.
 
 For GET requests: Since GET requests don't have a body by definition, you never use a Body struct. You just put your parameters (like path or query) directly on the input struct or let it be empty.
+
+----------------------
+
+Blob storage via Supabase
+due to lack of official documentation support for Go, using the S3 compatible version instead (supabase is s3 compliant automatically)
+
+So get the S3 endpoint key, the access key and the seecret key
+install the aws sdk to use s3 functionality in go

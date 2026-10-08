@@ -19,6 +19,7 @@ import (
 	so it must be imported by name*/
 	"api.com/handlers/wings"
 	"api.com/repositories"
+	"api.com/services"
 )
 
 func main() {
@@ -30,12 +31,25 @@ func main() {
 		log.Fatalf("Failed to load env...\nError: %v", err)
 	}
 	backend_url := os.Getenv("BACKEND_URL")
+	accessKey := os.Getenv("SUPABASE_S3_ACCESS_KEY")
+	secretKey := os.Getenv("SUPABASE_S3_SECRET_KEY")
+	region := os.Getenv("SUPABASE_S3_REGION")
+	endpoint := os.Getenv("SUPABASE_S3_ENDPOINT")
+
 	//connection_string := os.Getenv("DB_URL")
 	connection_string := os.Getenv("DB_URL_SUPABASE")
 
 	//Initialize connection to DB
 	log.Println("Initializing DB ...")
 	repositories.Init_DB(context.Background(), connection_string)
+
+	//Initialize S3 client
+	log.Println("Initializing S3 client...")
+	s3_client, err := services.NewSupabaseS3Client(accessKey, secretKey, region, endpoint)
+	if err != nil {
+		log.Fatalf("Failed to initialize S3 client...\nError: %v", err)
+	}
+	log.Printf("S3 Client initialized successfully")
 
 	// 1. CREATE CHI ROUTER
 	r := chi.NewRouter()
@@ -79,7 +93,7 @@ func main() {
 
 	//reverse proxy detection router
 	handlers.RegisterDetectionHandler(api)
-	handlers.RegisterVehicleEntryExitHandler(api)
+	handlers.RegisterVehicleEntryExitHandler(api, s3_client)
 	handlers.RegisterBillsHandler(api)
 	handlers.RegisterVideoHandler(r)
 
