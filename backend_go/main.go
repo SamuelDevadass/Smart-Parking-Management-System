@@ -36,6 +36,7 @@ func main() {
 	region := os.Getenv("SUPABASE_S3_REGION")
 	endpoint := os.Getenv("SUPABASE_S3_ENDPOINT")
 	bucket_name := os.Getenv("S3_BUCKET")
+	supabase_url := os.Getenv("SUPABASE_URL")
 
 	//connection_string := os.Getenv("DB_URL")
 	connection_string := os.Getenv("DB_URL_SUPABASE")
@@ -94,7 +95,7 @@ func main() {
 
 	//reverse proxy detection router
 	handlers.RegisterDetectionHandler(api)
-	handlers.RegisterVehicleEntryExitHandler(api, s3_client, bucket_name)
+	handlers.RegisterVehicleEntryExitHandler(api, s3_client, bucket_name, supabase_url)
 	handlers.RegisterBillsHandler(api)
 	handlers.RegisterVideoHandler(r)
 

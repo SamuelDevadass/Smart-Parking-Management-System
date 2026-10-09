@@ -35,22 +35,26 @@ func NewSupabaseS3Client(accessKey string, secretKey string,
 	return client, nil
 }
 
-func Upload(ctx context.Context, s *s3.Client, bucket_name string,
-	filePath string, objectPath string) (bool, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Println("Unable to open file to upload ...\n", err)
-		return false, err
-	}
-	defer file.Close()
-	_, err = s.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucket_name),
-		Key:    aws.String(objectPath),
-		Body:   file,
-	})
-	if err != nil {
-		log.Println("Unable to upload file ...\n", err)
-		return false, err
-	}
-	return true, err
+func Upload(ctx context.Context, s *s3.Client, bucketName string, supabase_url string,
+    filePath string, objectPath string, ) (string, error) {
+    file, err := os.Open(filePath)
+    if err != nil {
+        log.Println("Unable to open file to upload:", err)
+        return "", err
+    }
+    defer file.Close()
+    _, err = s.PutObject(ctx, &s3.PutObjectInput{
+        Bucket: aws.String(bucketName),
+        Key:    aws.String(objectPath),
+        Body:   file,
+    })
+    if err != nil {
+        log.Println("Unable to upload file:", err)
+        return "", err
+    }
+
+    blobURL := fmt.Sprintf("%s/storage/v1/object/public/%s/%s",
+        supabase_url, bucketName, objectPath,)
+
+    return blobURL, nil
 }

@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"api.com/services"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -51,7 +50,7 @@ func GetDetectionStatus() (*DetectionStatus, error) {
 }
 
 func CreateFolderPath(ctx context.Context, license_plate string, folder_path string,
-	s3_client *s3.Client, bucket_name string) string {
+	s3_client *s3.Client, bucket_name string, supabase_url string) string {
 	if folder_path == "" || license_plate == "" {
 		log.Println("Error fetching detection status")
 		return ""
@@ -77,8 +76,19 @@ func CreateFolderPath(ctx context.Context, license_plate string, folder_path str
 		return ""
 	}
 	log.Println("Attempting to upload to Blob...")
-	status, err := services.Upload(ctx, s3_client)
-	return vehiclePath
+	source_file := filepath.Join(vehiclePath, "Car_Crop_Capture.jpg")
+	blob_path, err := Upload(ctx, s3_client, bucket_name,
+		supabase_url, source_file, source_file)
+	if err != nil {
+		log.Println("Upload failed\nError: ", err)
+	}
+	source_file = filepath.Join(vehiclePath, "Captured_Image.jpg")
+	blob_path, err = Upload(ctx, s3_client, bucket_name,
+		supabase_url, source_file, source_file)
+	if err != nil {
+		log.Println("Upload failed\nError: ", err)
+	}
+	return blob_path
 }
 
 func copyDir(src string, dst string) error {

@@ -15,7 +15,7 @@ import (
 )
 
 func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
-	bucket_name string) {
+	bucket_name string, supabase_url string) {
 
 	//-------------------Get-Vehicle------------------------------
 	huma.Register(api, huma.Operation{
@@ -74,7 +74,8 @@ func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Failed to fetch detection status")
 		}
-		input.Body.FolderPath = services.CreateFolderPath(ctx, input.Body.LicensePlate, status.FolderPath, s3_client, bucket_name)
+		input.Body.FolderPath = services.CreateFolderPath(ctx, input.Body.LicensePlate, 
+			status.FolderPath, s3_client, bucket_name, supabase_url)
 		status_py, err_py := repositories.MarkEntry(ctx, input, now)
 		if err_py != nil || status_py != true {
 			log.Println("Failed to mark entry \n", err_py)
