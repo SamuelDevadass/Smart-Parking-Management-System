@@ -24,7 +24,7 @@
 | **API Layer** | Go Huma | Railway |
 | **Backend** | Reverse Proxy (Go to FastAPI) | Railway |
 | **Database** | PostgreSQL + PGX | Supabase |
-| **Capture** | Blob Storage | Supabase Blob |       
+| **Capture** | Blob Storage | Supabase Blob with S3 configuration |       
 
 ## Video Walkthrough
 
