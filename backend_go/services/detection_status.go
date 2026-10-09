@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -77,14 +78,18 @@ func CreateFolderPath(ctx context.Context, license_plate string, folder_path str
 	}
 	log.Println("Attempting to upload to Blob...")
 	source_file := filepath.Join(vehiclePath, "Car_Crop_Capture.jpg")
+	object_key := path.Join("capture_log", date,
+		license_plate+"_"+currentTime, "Car_Crop_Capture.jpg")
 	blob_path, err := Upload(ctx, s3_client, bucket_name,
-		supabase_url, source_file, source_file)
+		supabase_url, source_file, object_key)
 	if err != nil {
 		log.Println("Upload failed\nError: ", err)
 	}
 	source_file = filepath.Join(vehiclePath, "Captured_Image.jpg")
+	object_key = path.Join("capture_log", date,
+		license_plate+"_"+currentTime, "Captured_Image.jpg")
 	blob_path, err = Upload(ctx, s3_client, bucket_name,
-		supabase_url, source_file, source_file)
+		supabase_url, source_file, object_key)
 	if err != nil {
 		log.Println("Upload failed\nError: ", err)
 	}

@@ -69,3 +69,6 @@ due to lack of official documentation support for Go, using the S3 compatible ve
 
 So get the S3 endpoint key, the access key and the seecret key
 install the aws sdk to use s3 functionality in go
+
+use filepath.join for windows based paths (\)
+Use path.Join for linux based paths (/)
