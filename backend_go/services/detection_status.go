@@ -17,8 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-const pythonBaseURL = "http://localhost:8001"
-const detectionBasePath = `C:\Users\Samuel\Desktop\SAM\CODING\PYTHON\LicensePlateRecognition\License-Plate-Detector\backend`
+// const pythonBaseURL = "http://localhost:8001"
+//const detectionBasePath = `C:\Users\Samuel\Desktop\SAM\CODING\PYTHON\LicensePlateRecognition\License-Plate-Detector\backend`
 
 // --------------------------VEHICLE_ENTRY_EXIT-------------------------------------------
 
@@ -29,8 +29,8 @@ type DetectionStatus struct {
 	FolderPath   string `json:"folder_path"`
 }
 
-func GetDetectionStatus() (*DetectionStatus, error) {
-	url := pythonBaseURL + "/api/detection/status"
+func GetDetectionStatus(python_url string) (*DetectionStatus, error) {
+	url := python_url + "/api/detection/status"
 	log.Println("Calling Python detection service:", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -51,7 +51,8 @@ func GetDetectionStatus() (*DetectionStatus, error) {
 }
 
 func CreateFolderPath(ctx context.Context, license_plate string, folder_path string,
-	s3_client *s3.Client, bucket_name string, supabase_url string) string {
+	s3_client *s3.Client, bucket_name string, supabase_url string,
+	detection_base_path string) string {
 	if folder_path == "" || license_plate == "" {
 		log.Println("Error fetching detection status")
 		return ""
@@ -60,7 +61,7 @@ func CreateFolderPath(ctx context.Context, license_plate string, folder_path str
 	// Python gives us something like:
 	// scans/2026-10-01_16-56-38
 	// Make it relative to the Python detection service.
-	sourcePath := filepath.Join(detectionBasePath, folder_path)
+	sourcePath := filepath.Join(detection_base_path, folder_path)
 	date := time.Now().Format("02-01-2006")
 	currentTime := time.Now().Format("15-04-05")
 	vehiclePath := filepath.Join("capture_log", date,

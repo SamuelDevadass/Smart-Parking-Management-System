@@ -14,7 +14,7 @@ import (
 
 const pythonBaseURL = "http://localhost:8001"
 
-func RegisterDetectionHandler(api huma.API) {
+func RegisterDetectionHandler(api huma.API, python_url string) {
 
 	//-------------------Start-Detection-----------------------------
 	huma.Register(api, huma.Operation{
@@ -23,7 +23,7 @@ func RegisterDetectionHandler(api huma.API) {
 		Path:        "/api/detection/start",
 	}, func(ctx context.Context, input *struct{}) (
 		*models.StartDetectionResponse, error) {
-		resp, err := http.Post(pythonBaseURL+"/api/detection/start", "application/json", nil)
+		resp, err := http.Post(python_url+"/api/detection/start", "application/json", nil)
 		if err != nil {
 			log.Println("Failed to start deteection\n", err)
 			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))
@@ -45,7 +45,7 @@ func RegisterDetectionHandler(api huma.API) {
 		Path:        "/api/detection/status",
 	}, func(ctx context.Context, input *struct{}) (
 		*models.DetectionStatusResponse, error) {
-		status, err := services.GetDetectionStatus()
+		status, err := services.GetDetectionStatus(python_url)
 		if err != nil {
 			log.Println("Unable to reach OCR service:", err)
 			return nil, huma.Error500InternalServerError(
@@ -66,7 +66,7 @@ func RegisterDetectionHandler(api huma.API) {
 		Path:        "/api/detection/stop",
 	}, func(ctx context.Context, input *struct{}) (
 		*models.StopDetectionResponse, error) {
-		resp, err := http.Post(pythonBaseURL+"/api/detection/stop", "application/json", nil)
+		resp, err := http.Post(python_url+"/api/detection/stop", "application/json", nil)
 		if err != nil {
 			log.Println("Unable to start OCR Engine\n", err)
 			return nil, huma.Error500InternalServerError(fmt.Sprintf("Failed to reach OCR service: %v", err))

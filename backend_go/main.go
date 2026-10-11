@@ -37,9 +37,11 @@ func main() {
 	endpoint := os.Getenv("SUPABASE_S3_ENDPOINT")
 	bucket_name := os.Getenv("S3_BUCKET")
 	supabase_url := os.Getenv("SUPABASE_URL")
-
+	python_url := os.Getenv("FASTAPI_URL")
+	detection_base_path := os.Getenv("DETECTION_BASE_PATH")
 	//connection_string := os.Getenv("DB_URL")
 	connection_string := os.Getenv("DB_URL_SUPABASE")
+	log.Println("Environment Variables Configured successfully...")
 
 	//Initialize connection to DB
 	log.Println("Initializing DB ...")
@@ -94,8 +96,8 @@ func main() {
 	handlers.RegisterSpotHandler(api)
 
 	//reverse proxy detection router
-	handlers.RegisterDetectionHandler(api)
-	handlers.RegisterVehicleEntryExitHandler(api, s3_client, bucket_name, supabase_url)
+	handlers.RegisterDetectionHandler(api, python_url)
+	handlers.RegisterVehicleEntryExitHandler(api, s3_client, bucket_name, supabase_url, python_url, detection_base_path)
 	handlers.RegisterBillsHandler(api)
 	handlers.RegisterVideoHandler(r)
 
