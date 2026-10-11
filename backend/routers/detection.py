@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from services import detection
-
+from services import folder_path_service
 router = APIRouter()
 
 @router.post("/api/detection/start")
@@ -18,3 +18,8 @@ def detection_status():
 def stop_detection():
     detection.stop_detection()
     return {"ok": True}
+
+# for blob path
+@router.get("/api/detection/folder/{license_plate}")
+def blob_path(license_plate: str):
+    return folder_path_service.create_folder_path(license_plate)

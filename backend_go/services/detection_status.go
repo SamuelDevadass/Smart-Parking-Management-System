@@ -3,18 +3,12 @@
 package services
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"os"
-	"path"
-	"path/filepath"
-	"time"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"net/url"
+	"strings"
 )
 
 // const pythonBaseURL = "http://localhost:8001"
@@ -50,6 +44,32 @@ func GetDetectionStatus(python_url string) (*DetectionStatus, error) {
 	return &status, nil
 }
 
+func GetFolderPath(pythonURL string, licensePlate string) (string, error) {
+	endpoint := strings.TrimRight(pythonURL, "/") +
+		"/api/detection/folder/" + url.PathEscape(licensePlate)
+
+	log.Println("Calling Python detection service:", endpoint)
+
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Python detection service returned %s", resp.Status)
+	}
+
+	var result string
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("failed to decode detection response: %w", err)
+	}
+
+	log.Printf("Storage folder path received: %s", result)
+	return result, nil
+}
+
+/*
 func CreateFolderPath(ctx context.Context, license_plate string, folder_path string,
 	s3_client *s3.Client, bucket_name string, supabase_url string,
 	detection_base_path string) string {
@@ -129,4 +149,4 @@ func copyFile(src string, dst string) error {
 		return err
 	}
 	return output.Close()
-}
+}*/
