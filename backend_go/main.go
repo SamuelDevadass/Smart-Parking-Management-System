@@ -36,7 +36,7 @@ func main() {
 	region := os.Getenv("SUPABASE_S3_REGION")
 	endpoint := os.Getenv("SUPABASE_S3_ENDPOINT")
 	bucket_name := os.Getenv("S3_BUCKET")
-	supabase_url := os.Getenv("SUPABASE_URL")
+	supabase_url := os.Getenv("SUPABASE_S3_URL")
 	python_url := os.Getenv("FASTAPI_URL")
 	detection_base_path := os.Getenv("DETECTION_BASE_PATH")
 	//connection_string := os.Getenv("DB_URL")
