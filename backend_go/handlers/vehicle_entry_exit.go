@@ -15,7 +15,7 @@ import (
 )
 
 func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
-	bucket_name string, supabase_url string, python_url string, detection_base_path string) {
+	bucket_name string, supabase_s3_url string, python_url string, detection_base_path string) {
 
 	//-------------------Get-Vehicle------------------------------
 	huma.Register(api, huma.Operation{

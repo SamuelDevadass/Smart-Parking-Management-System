@@ -20,6 +20,9 @@ def create_folder_path(license_number: str) -> Optional[str]:
     date = datetime.now().strftime("%d-%m-%Y")
     current_time = datetime.now().strftime("%H-%M-%S")
     vehicle_time = (f"capture_log/{date}/{license_number}_{current_time}")
+    print("URL:", repr(supabase_url))
+    print("KEY:", repr(supabase_key[:12]) if supabase_key else None, "len:", len(supabase_key or ""))
+    print("BUCKET:", repr(bucket_name))
     filenames = ["Captured_Image.jpg", "Car_Crop_Capture.jpg"]
     for filename in filenames:
         local_file = os.path.join(folder_path_raw, filename)

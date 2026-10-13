@@ -36,7 +36,7 @@ func NewSupabaseS3Client(accessKey string, secretKey string,
 	return client, nil
 }
 
-func Upload(ctx context.Context, s *s3.Client, bucketName string, supabase_url string,
+func Upload(ctx context.Context, s *s3.Client, bucketName string, supabase_s3_url string,
 	filePath string, objectPath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -55,7 +55,7 @@ func Upload(ctx context.Context, s *s3.Client, bucketName string, supabase_url s
 	}
 
 	blobURL := fmt.Sprintf("%s/storage/v1/object/public/%s/%s",
-		supabase_url, bucketName, objectPath)
+		supabase_s3_url, bucketName, objectPath)
 
 	return blobURL, nil
 }
