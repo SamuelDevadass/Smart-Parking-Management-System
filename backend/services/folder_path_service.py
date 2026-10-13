@@ -35,6 +35,10 @@ def create_folder_path(license_number: str) -> Optional[str]:
     # This is not a direct URL to either image.
     direct_path ="https://supabase.com/dashboard/project/smxmlxxaifxqckxnaqce/storage/files/buckets/parking-logs?path="+vehicle_time
     return direct_path
+
+# """Error fixed"""
+# BRO 😂 that actually makes sense. The key clue is that restarting the Go terminal fixed the value.
+# Your terminal was probably holding a stale environment variable.
 # def create_folder_path(license_number:str) -> Optional[str]:
 
 #     folder_path_raw = detection.get_status().get("folder_path", "")
