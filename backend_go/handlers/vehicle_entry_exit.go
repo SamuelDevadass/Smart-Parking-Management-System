@@ -75,6 +75,7 @@ func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
 			return nil, huma.Error500InternalServerError("Failed to fetch detection status")
 		}
 		input.Body.FolderPath, _ = services.GetFolderPath(python_url, input.Body.LicensePlate, "Entry")
+		/*Edit function and pass time*/
 		status_py, err_py := repositories.MarkEntry(ctx, input, now)
 		if err_py != nil || status_py != true {
 			log.Println("Failed to mark entry \n", err_py)
@@ -115,6 +116,9 @@ func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
 		Path:        "/api/exits",
 	}, func(ctx context.Context, input *models.MarkExitInput) (
 		*models.MarkExitResponse, error) {
+		/*Change this function to also return folder_path*/
+		/*Call the GetFolderPath function (no need to pass time) and get the folder_path and
+		upload as exit subfolder*/
 		session, err := repositories.GetActiveSession_NoPath(ctx, input)
 		if err != nil {
 			log.Println("Failed to fetch active session \n", err)

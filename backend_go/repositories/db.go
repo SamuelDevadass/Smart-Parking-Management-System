@@ -232,6 +232,8 @@ func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (
 }
 
 // ----------------mark-exit--------------------
+
+/*Edit this function to return folder_path as well*/
 func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (
 	*models.GetActiveSessionResponse, error) {
 	resp := &models.GetActiveSessionResponse{}

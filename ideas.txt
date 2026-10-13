@@ -46,3 +46,5 @@ For folder path entry in DB log
     For entry upload files to say a subfolder Entry
     For exit , get the blob path from DB log and upload captures to a subfolder Exit
     Make the upload to blob function generic / reusable by adding an extra subfolder name argument
+
+    but cant make the function generic unless the api from go passes all the folder paths along with times!

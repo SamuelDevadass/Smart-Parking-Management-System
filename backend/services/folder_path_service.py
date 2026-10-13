@@ -6,6 +6,9 @@ from supabase import create_client, Client
 from services import detection
 load_dotenv(".//.env")
 
+"""Function should take time and path as parameters from go if want to make it generic
+even for entry take time from go
+for exit no need to take time since we can modify get active session to return the supabase folder"""
 def create_folder_path(license_number: str, action_subfolder: str) -> Optional[str]:
     folder_path_raw = detection.get_status().get("folder_path", "")
     if not folder_path_raw or not license_number:
