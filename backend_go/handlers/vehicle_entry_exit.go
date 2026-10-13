@@ -74,7 +74,7 @@ func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Failed to fetch detection status")
 		}
-		input.Body.FolderPath, _ = services.GetFolderPath(python_url, input.Body.LicensePlate)
+		input.Body.FolderPath, _ = services.GetFolderPath(python_url, input.Body.LicensePlate, "Entry")
 		status_py, err_py := repositories.MarkEntry(ctx, input, now)
 		if err_py != nil || status_py != true {
 			log.Println("Failed to mark entry \n", err_py)

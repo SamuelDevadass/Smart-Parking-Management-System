@@ -6,11 +6,13 @@ from supabase import create_client, Client
 from services import detection
 load_dotenv(".//.env")
 
-def create_folder_path(license_number: str) -> Optional[str]:
+def create_folder_path(license_number: str, action_subfolder: str) -> Optional[str]:
     folder_path_raw = detection.get_status().get("folder_path", "")
     if not folder_path_raw or not license_number:
         print("Error fetching detection status or license number")
         return ""
+    if not action_subfolder:
+        action_subfolder = "Entry"
     supabase_url = os.getenv("SUPABASE_URL")
     supabase_key = os.getenv("SUPABASE_SECRET_KEY")
     bucket_name = os.getenv("S3_BUCKET")
@@ -26,7 +28,7 @@ def create_folder_path(license_number: str) -> Optional[str]:
     filenames = ["Captured_Image.jpg", "Car_Crop_Capture.jpg"]
     for filename in filenames:
         local_file = os.path.join(folder_path_raw, filename)
-        output_file = f"{vehicle_time}/{filename}"
+        output_file = f"{vehicle_time}/{action_subfolder}/{filename}"
         with open(local_file, "rb") as f:
             supabase.storage.from_(bucket_name).upload(path=output_file,file=f,
                 file_options={"cache-control": "3600", "upsert": "false", 

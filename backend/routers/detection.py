@@ -21,5 +21,5 @@ def stop_detection():
 
 # for blob path
 @router.get("/api/detection/folder/{license_plate}")
-def blob_path(license_plate: str):
-    return folder_path_service.create_folder_path(license_plate)
+def blob_path(license_plate: str, action_subfolder: str):
+    return folder_path_service.create_folder_path(license_plate, action_subfolder)

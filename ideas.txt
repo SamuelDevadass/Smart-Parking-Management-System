@@ -40,3 +40,9 @@ Frontend deploy to vercel
 API and Python OCR go to Render Railway 
 
 Need proper justification for each chosen tool
+
+For folder path entry in DB log
+    While entry create a Folder on blob as VehicleNo_EntryTime
+    For entry upload files to say a subfolder Entry
+    For exit , get the blob path from DB log and upload captures to a subfolder Exit
+    Make the upload to blob function generic / reusable by adding an extra subfolder name argument
