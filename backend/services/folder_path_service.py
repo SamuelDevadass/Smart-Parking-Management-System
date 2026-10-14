@@ -9,37 +9,49 @@ load_dotenv(".//.env")
 """Function should take time and path as parameters from go if want to make it generic
 even for entry take time from go
 for exit no need to take time since we can modify get active session to return the supabase folder"""
-def create_folder_path(license_number: str, action_subfolder: str) -> Optional[str]:
+def create_folder_path(license_number: str, action_subfolder: str, blob_folder) -> Optional[str]:
     folder_path_raw = detection.get_status().get("folder_path", "")
     if not folder_path_raw or not license_number:
         print("Error fetching detection status or license number")
         return ""
     if not action_subfolder:
         action_subfolder = "Entry"
+    
     supabase_url = os.getenv("SUPABASE_URL")
     supabase_key = os.getenv("SUPABASE_SECRET_KEY")
     bucket_name = os.getenv("S3_BUCKET")
     if not supabase_url or not supabase_key or not bucket_name:
         raise ValueError("Missing Supabase URL, secret key, or bucket name")
     supabase: Client = create_client(supabase_url, supabase_key)
-    date = datetime.now().strftime("%d-%m-%Y")
-    current_time = datetime.now().strftime("%H-%M-%S")
-    vehicle_time = (f"capture_log/{date}/{license_number}_{current_time}")
+
+    if action_subfolder == "Entry":
+        date = datetime.now().strftime("%d-%m-%Y")
+        current_time = datetime.now().strftime("%H-%M-%S")
+        vehicle_time = (f"capture_log/{date}/{license_number}_{current_time}")
+    elif action_subfolder == "Exit" and blob_folder is not None:
+        vehicle_time = blob_folder
+    
     print("URL:", repr(supabase_url))
     print("KEY:", repr(supabase_key[:12]) if supabase_key else None, "len:", len(supabase_key or ""))
     print("BUCKET:", repr(bucket_name))
+    
     filenames = ["Captured_Image.jpg", "Car_Crop_Capture.jpg"]
     for filename in filenames:
         local_file = os.path.join(folder_path_raw, filename)
-        output_file = f"{vehicle_time}/{action_subfolder}/{filename}"
+        if action_subfolder == "Entry":
+            output_file = f"{vehicle_time}/{action_subfolder}/{filename}"
+        elif action_subfolder == "Exit" and blob_folder is not None:
+            output_file = f"{blob_folder}/{action_subfolder}/{filename}"
         with open(local_file, "rb") as f:
             supabase.storage.from_(bucket_name).upload(path=output_file,file=f,
-                file_options={"cache-control": "3600", "upsert": "false", 
-                              "content-type": "image/jpeg",},)
-    # Return the folder prefix URL.
-    # This is not a direct URL to either image.
+            file_options={"cache-control": "3600", "upsert": "false", 
+                                "content-type": "image/jpeg",},)
+
     direct_path ="https://supabase.com/dashboard/project/smxmlxxaifxqckxnaqce/storage/files/buckets/parking-logs?path="+vehicle_time
     return direct_path
+    
+        
+
 
 # """Error fixed"""
 # BRO 😂 that actually makes sense. The key clue is that restarting the Go terminal fixed the value.

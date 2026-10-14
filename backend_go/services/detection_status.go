@@ -44,10 +44,12 @@ func GetDetectionStatus(python_url string) (*DetectionStatus, error) {
 	return &status, nil
 }
 
-func GetFolderPath(pythonURL string, licensePlate string, action_subfolder string) (
+func GetFolderPath(pythonURL string, licensePlate string,
+	action_subfolder string, blob_folder string) (
 	string, error) {
 	params := url.Values{}
 	params.Set("action_subfolder", action_subfolder)
+	params.Set("blob_folder", blob_folder)
 	endpoint := strings.TrimRight(pythonURL, "/") +
 		"/api/detection/folder/" + url.PathEscape(licensePlate) + "?" + params.Encode()
 
