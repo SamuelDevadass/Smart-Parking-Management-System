@@ -72,3 +72,17 @@ install the aws sdk to use s3 functionality in go
 
 use filepath.join for windows based paths (\)
 Use path.Join for linux based paths (/)
+
+
+---------------------------------------------------
+Turned on RLS security for Supabase DB rows
+By default they are disabled so anyone with the link can see and edit DB freely on the internet
+By turning RLS on only authenticated users with supabase credentials for service_key 
+or connection string can use access the DB
+
+
+DB Learnings: 
+Always enable RLS
+Use where clause for user credential based view separation instead of dynamic demand based views
+on every run
+Parameterized query using $ or %s resolves SQLi but never pass raw strings or create query using a string like using fmt.Sprintf or {} as they can still create vulnerabilities to SQLi
