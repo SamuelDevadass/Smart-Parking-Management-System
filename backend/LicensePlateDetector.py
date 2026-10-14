@@ -55,7 +55,8 @@ class LicensePlateDetection:
         # Get Current Time for logging
         now = datetime.now()
         print("Current Time: ", now)
-
+        #create scans folder if doesnt exist
+        os.makedirs("scans", exist_ok = True)
         # New repository for current cycle
         self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S") # os.mkdir() returns None hence create path as string and then create folder
         os.mkdir(self.folder_path)
