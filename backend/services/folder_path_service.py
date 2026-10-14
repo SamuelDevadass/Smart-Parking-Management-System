@@ -31,10 +31,6 @@ def create_folder_path(license_number: str, action_subfolder: str, blob_folder) 
     elif action_subfolder == "Exit" and blob_folder is not None:
         vehicle_time = blob_folder
     
-    print("URL:", repr(supabase_url))
-    print("KEY:", repr(supabase_key[:12]) if supabase_key else None, "len:", len(supabase_key or ""))
-    print("BUCKET:", repr(bucket_name))
-    
     filenames = ["Captured_Image.jpg", "Car_Crop_Capture.jpg"]
     for filename in filenames:
         local_file = os.path.join(folder_path_raw, filename)
@@ -48,7 +44,7 @@ def create_folder_path(license_number: str, action_subfolder: str, blob_folder) 
                                 "content-type": "image/jpeg",},)
 
     print("Upload succeeded")
-    direct_path ="https://supabase.com/dashboard/project/smxmlxxaifxqckxnaqce/storage/files/buckets/parking-logs?path="+vehicle_time
+    direct_path = os.getenv("SUPABASE_WEB_VIEW_PREFIX")+vehicle_time
     return direct_path
     
         
