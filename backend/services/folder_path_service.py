@@ -44,6 +44,7 @@ def create_folder_path(license_number: str, action_subfolder: str, blob_folder) 
                                 "content-type": "image/jpeg",},)
 
     print("Upload succeeded")
+    # add cleanup here
     direct_path = os.getenv("SUPABASE_WEB_VIEW_PREFIX")+vehicle_time
     return direct_path
     
