@@ -47,6 +47,7 @@ def create_folder_path(license_number: str, action_subfolder: str, blob_folder) 
             file_options={"cache-control": "3600", "upsert": "false", 
                                 "content-type": "image/jpeg",},)
 
+    print("Upload succeeded")
     direct_path ="https://supabase.com/dashboard/project/smxmlxxaifxqckxnaqce/storage/files/buckets/parking-logs?path="+vehicle_time
     return direct_path
     

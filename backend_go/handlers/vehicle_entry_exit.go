@@ -119,7 +119,7 @@ func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
 		/*Change this function to also return folder_path*/
 		/*Call the GetFolderPath function (no need to pass time) and get the folder_path and
 		upload as exit subfolder*/
-		session, err := repositories.GetActiveSession_NoPath(ctx, input)
+		session, blob_folder, err := repositories.GetActiveSession_NoPath(ctx, input)
 		if err != nil {
 			log.Println("Failed to fetch active session \n", err)
 			return nil, huma.Error500InternalServerError("Failed to fetch session details")
@@ -160,6 +160,9 @@ func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
 		resp.Body.ExitTime = exitTime
 		resp.Body.Duration = duration.String()
 		resp.Body.Amount = float32(amount)
+
+		log.Println("Attempting to upload Exit captures to blob ...")
+		_, _ = services.GetFolderPath(python_url, input.Body.LicensePlate, "Exit", blob_folder)
 		return resp, nil
 	})
 }

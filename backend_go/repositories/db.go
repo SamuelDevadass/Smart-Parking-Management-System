@@ -235,22 +235,23 @@ func GetActiveSession(ctx context.Context, input *models.GetLicensePlate) (
 
 /*Edit this function to return folder_path as well*/
 func GetActiveSession_NoPath(ctx context.Context, input *models.MarkExitInput) (
-	*models.GetActiveSessionResponse, error) {
+	*models.GetActiveSessionResponse, string, error) {
 	resp := &models.GetActiveSessionResponse{}
-
-	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number
+	// Get blob path folder
+	var blob_folder string
+	err := DB.QueryRow(ctx, `SELECT entry_time, centre_id, wing, floor, spot_number, image_folder_path
         						FROM parking_log WHERE license_number = $1 
           						AND exit_time IS NULL ORDER BY entry_time DESC LIMIT 1`,
 		input.Body.LicensePlate).Scan(&resp.Body.EntryTime, &resp.Body.CentreID, &resp.Body.Wing,
-		&resp.Body.Floor, &resp.Body.SpotNumber)
+		&resp.Body.Floor, &resp.Body.SpotNumber, &blob_folder)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, nil
+		return nil, "", nil
 	}
 	if err != nil {
 		log.Println("Error fetching session details:", err)
-		return nil, err
+		return nil, "", err
 	}
-	return resp, nil
+	return resp, blob_folder, nil
 }
 
 func GetvehicleType(ctx context.Context, license_plate string) (
