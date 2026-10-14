@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"api.com/models"
@@ -162,7 +163,13 @@ func RegisterVehicleEntryExitHandler(api huma.API, s3_client *s3.Client,
 		resp.Body.Amount = float32(amount)
 
 		log.Println("Attempting to upload Exit captures to blob ...")
+		//Blob folder is the entire https url . Filter it to get the actual path prefix
+		idx := strings.Index(blob_folder, "capture_log")
+		if idx != 1 {
+			blob_folder = blob_folder[idx:]
+		}
 		_, _ = services.GetFolderPath(python_url, input.Body.LicensePlate, "Exit", blob_folder)
+
 		return resp, nil
 	})
 }
