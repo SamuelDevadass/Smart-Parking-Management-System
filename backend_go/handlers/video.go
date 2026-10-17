@@ -7,13 +7,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-const pythonStreamURL = "http://localhost:8001/api/video"
-
 // RegisterVideoHandler registers the raw video stream proxy route on Chi
-func RegisterVideoHandler(r chi.Router) {
+func RegisterVideoHandler(r chi.Router, python_url string) {
 	r.Get("/api/video", func(w http.ResponseWriter, r *http.Request) {
 		// 1. Connect to FastAPI's video stream
-		resp, err := http.Get(pythonStreamURL)
+		resp, err := http.Get(python_url + "/api/video")
 		if err != nil {
 			http.Error(w, "Failed to connect to OCR video stream", http.StatusInternalServerError)
 			return

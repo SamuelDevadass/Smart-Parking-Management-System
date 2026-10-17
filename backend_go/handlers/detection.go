@@ -12,7 +12,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-const pythonBaseURL = "http://localhost:8001"
+// const pythonBaseURL = "http://localhost:8001"
 
 func RegisterDetectionHandler(api huma.API, python_url string) {
 

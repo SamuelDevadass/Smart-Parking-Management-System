@@ -99,7 +99,7 @@ func main() {
 	handlers.RegisterDetectionHandler(api, python_url)
 	handlers.RegisterVehicleEntryExitHandler(api, s3_client, bucket_name, supabase_s3_url, python_url, detection_base_path)
 	handlers.RegisterBillsHandler(api)
-	handlers.RegisterVideoHandler(r)
+	handlers.RegisterVideoHandler(r, python_url)
 
 	// 5. LISTEN AND SERVE
 	log.Printf("Server running on http://%s", backend_url)
