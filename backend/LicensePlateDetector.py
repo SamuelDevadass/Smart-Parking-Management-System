@@ -22,6 +22,17 @@ class LicensePlateDetection:
         #self.camera = cv2.VideoCapture(0)
         self.latest_frame = None
         self.frame_lock = threading.Lock()
+    
+    def startup_check(self):
+        """Initialize a scan session without opening a camera."""
+        os.makedirs("scans", exist_ok=True)
+        now = datetime.now()
+        self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S")
+        # Avoid a collision if two sessions start within the same second.
+        os.makedirs(self.folder_path, exist_ok=False)
+        with self.frame_lock:
+            self.latest_frame = None
+        print(f"Detection session started: {self.folder_path}")
 
 
 
@@ -44,23 +55,23 @@ class LicensePlateDetection:
         with self.frame_lock:
             self.latest_frame = None
 
-    def startup_check(self):
-        """IMAGE CAPTURE PIPELINE"""
-        # Get Camera
-        """if not self.camera:
-            print("CAMERA not found\nExiting ... ")
-            exit()
-        print("CAMERA available at : ",self.camera)"""
-        print("Camera obtained from frontend...")
+    # def startup_check(self):
+    #     """IMAGE CAPTURE PIPELINE"""
+    #     # Get Camera
+    #     """if not self.camera:
+    #         print("CAMERA not found\nExiting ... ")
+    #         exit()
+    #     print("CAMERA available at : ",self.camera)"""
+    #     print("Camera obtained from frontend...")
 
-        # Get Current Time for logging
-        now = datetime.now()
-        print("Current Time: ", now)
-        #create scans folder if doesnt exist
-        os.makedirs("scans", exist_ok = True)
-        # New repository for current cycle
-        self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S") # os.mkdir() returns None hence create path as string and then create folder
-        os.mkdir(self.folder_path)
+    #     # Get Current Time for logging
+    #     now = datetime.now()
+    #     print("Current Time: ", now)
+    #     #create scans folder if doesnt exist
+    #     os.makedirs("scans", exist_ok = True)
+    #     # New repository for current cycle
+    #     self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S") # os.mkdir() returns None hence create path as string and then create folder
+    #     os.mkdir(self.folder_path)
 
     """Instead of creating final folder path somewhere else later
         Create it here itself so the image is always at the 
@@ -96,6 +107,7 @@ class LicensePlateDetection:
     def process_frame(self, frame):
         """Run YOLO on a browser-supplied frame and publish the annotated frame."""
         processed_frame = frame.copy()
+        cropped_car_capture = None
         results = self.yolo_model(processed_frame, verbose=False)
         for result in results:
             for box in result.boxes:
@@ -318,52 +330,101 @@ class LicensePlateDetection:
 class Detector:
     def __init__(self):
         self.License_Plate_Detector = LicensePlateDetection()
+        self.active = False
+        self.latest_crop = None
+        self.latest_raw_frame = None
+        self.result = {"status": "idle", "license_plate": "", "folder_path": "",}
 
-    def get_frame_bytes(self):
-            """Encode video bytes and send to frontend"""
-            with self.License_Plate_Detector.frame_lock:
-                if self.License_Plate_Detector.latest_frame is None:
-                    return None
-                success, buffer = cv2.imencode(".jpg", self.License_Plate_Detector.latest_frame)
-                if success:
-                    return buffer.tobytes()
-                return None
-    
+    def start_session(self):
+        if self.active:
+            raise RuntimeError("A detection session is already active.")
+        detector = self.License_Plate_Detector
+        detector.startup_check()
+        self.latest_crop = None
+        self.latest_raw_frame = None
+        self.result = {"status": "running","license_plate": "","folder_path": detector.folder_path}
+        self.active = True
+        return {"ok": True, **self.result}
+
     def decode_frame(self, image_bytes: bytes):
-        """Decode JPEG bytes from the frontend into an OpenCV BGR frame."""
         if not image_bytes:
             raise ValueError("Received an empty image body.")
-
         encoded_image = np.frombuffer(image_bytes, dtype=np.uint8)
         frame = cv2.imdecode(encoded_image, cv2.IMREAD_COLOR)
-
         if frame is None:
-            raise ValueError("Could not decode image bytes. Expected a valid JPEG image.")
-
+            raise ValueError("Could not decode the JPEG frame.")
         return frame
 
-    def start(self, image_bytes: bytes, stop_event):
-        print("STARTING APPLICATION . . .")
-        self.License_Plate_Detector.startup_check()
-        #name_list = self.License_Plate_Detector.video_capture_with_yolo(stop_event)
-        """Decode and process one JPEG frame received from the frontend."""
+    def process_frame(self, image_bytes: bytes):
+        """Process one frame synchronously using the existing YOLO model."""
+        if not self.active:
+            raise RuntimeError("Start a detection session first.")
         frame = self.decode_frame(image_bytes)
-        name_list = self.License_Plate_Detector.http_capture_with_yolo(frame, stop_event)
-        if len(name_list) > 1:
-            image_name = name_list[1]
-            text, detected = self.License_Plate_Detector.perform_ocr(image_name=image_name)
-            if detected:
-                print("YOLO OCR SUCCESS")
-                return text, self.License_Plate_Detector.folder_path
-            image_name = name_list[0]
-            return text,self.License_Plate_Detector.folder_path
+        detector = self.License_Plate_Detector
+        processed_frame, crop = detector.process_frame(frame)
+        # Retain the most recent input and qualifying crop for finalization.
+        self.latest_raw_frame = frame
+        if crop is not None and crop.size > 0:
+            self.latest_crop = crop
         else:
-            image_name = name_list[0]
+            self.latest_crop = processed_frame
+        return {"ok": True}
 
-        final_name, final_result = self.License_Plate_Detector.image_processing_pipeline(image_name = image_name)
-        text , detected = self.License_Plate_Detector.perform_ocr(image_name=final_name, image_array=final_result)
-        #self.License_Plate_Detector.cleanup(detected_status=detected)
-        return text,self.License_Plate_Detector.folder_path
+    def get_frame_bytes(self):
+        """Return the latest annotated frame for the video endpoint."""
+        detector = self.License_Plate_Detector
+        with detector.frame_lock:
+            frame = detector.latest_frame
+            if frame is None:
+                return None
+            success, buffer = cv2.imencode(".jpg", frame)
+        return buffer.tobytes() if success else None
+
+    def stop_session(self):
+        """Save the final capture and run OCR once."""
+        if not self.active:
+            raise RuntimeError("There is no active detection session.")
+        detector = self.License_Plate_Detector
+        folder = detector.folder_path
+
+        try:
+            if self.latest_raw_frame is None:
+                raise RuntimeError("No frames were received.")
+            # Save the final frame with YOLO annotations.
+            final_frame, final_crop = detector.process_frame(self.latest_raw_frame)
+            captured_path = os.path.join(folder, "Captured_Image.jpg")
+            if not cv2.imwrite(captured_path, final_frame):
+                raise RuntimeError("Could not save the final captured image.")
+            #detector.display_image(image_name = "Captured_Image.jpg", title = "LIVE CAPTURED IMAGE")
+
+            # Prefer the most recent crop from the processed frames.
+            crop = self.latest_crop if self.latest_crop is not None else final_crop
+            if crop is not None and crop.size > 0:
+                crop_path = os.path.join(folder, "Car_Crop_Capture.jpg")
+                if not cv2.imwrite(crop_path, crop):
+                    raise RuntimeError("Could not save the cropped car image.")
+                text, detected = detector.perform_ocr(image_name="Car_Crop_Capture.jpg")
+            else:
+                # Preserve your existing preprocessing/OCR fallback.
+                final_name, final_result = detector.image_processing_pipeline(
+                    image_name="Captured_Image.jpg")
+                detector.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
+                text, detected = detector.perform_ocr(image_name=final_name, 
+                                                      image_array=final_result,)
+
+            self.result = {"status": "done", 
+                "license_plate": (text or "").strip() if detected else "", "folder_path": folder}
+            return {"ok": True, **self.result}
+
+        except Exception:
+            self.result["status"] = "error"
+            raise
+
+        finally:
+            self.active = False
+
+    def get_status(self):
+        return dict(self.result)
 
 if __name__ == "__main__":
     app = Detector()

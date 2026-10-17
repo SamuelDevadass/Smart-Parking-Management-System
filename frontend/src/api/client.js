@@ -8,26 +8,24 @@
   Vite proxies "/api/*" to the Go Huma backend in development.
 */
 
+
 async function request(path, options = {}) {
   const res = await fetch(`/api${path}`, {
+    ...options,
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
     },
-    ...options,
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(
-      `${options.method || "GET"} ${path} failed (${res.status}): ${text}`
-    );
+    const message = await res.text();
+    throw new Error(message || `Request failed: ${res.status}`);
   }
-
-  if (res.status === 204) return null;
 
   return res.json();
 }
+
 
 export const Api = {
   // ============================================================
@@ -55,8 +53,8 @@ export const Api = {
   // SPOTS
   // ============================================================
 
-getSpotAvailability: (wing) =>
-  request(`/spots/availability?wing=${encodeURIComponent(wing)}`),
+  getSpotAvailability: (wing) =>
+    request(`/spots/availability?wing=${encodeURIComponent(wing)}`),
 
   getAvailableSpots: async (wing, centreId, size) => {
     const data = await request(
@@ -68,19 +66,28 @@ getSpotAvailability: (wing) =>
     return data.available_spots_list;
   },
 
+  
   // ============================================================
   // DETECTION
   // ============================================================
 
-  startDetection: async (imageBlob) => {
-  const data = await request("/detection/start", {
-    method: "POST",
-    headers: { "Content-Type": "image/jpeg" },
-    body: imageBlob,
-  });
+  startDetection: async () => {
+    const data = await request("/detection/start", {
+      method: "POST",
+    });
 
-  return data.ok;
-},
+    return data.ok;
+  },
+
+  processDetectionFrame: async (imageBlob) => {
+    const data = await request("/detection/frame", {
+      method: "POST",
+      headers: { "Content-Type": "image/jpeg" },
+      body: imageBlob,
+    });
+
+    return data.ok;
+  },
 
   getDetectionStatus: async () => {
     const data = await request("/detection/status");
@@ -95,6 +102,7 @@ getSpotAvailability: (wing) =>
 
     return data.ok;
   },
+
 
   // ============================================================
   // VEHICLES

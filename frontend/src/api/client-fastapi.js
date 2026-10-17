@@ -40,18 +40,37 @@ export const Api =
   getSpotAvailability: (wing) => request(`/spots/availability?wing=${encodeURIComponent(wing)}`),
 
  
-  startDetection: async (imageBlob) => {
-  const data = await request("/detection/start", {
-    method: "POST",
-    headers: { "Content-Type": "image/jpeg" },
-    body: imageBlob,
-  });
+  startDetection: async () => {
+      const data = await request("/detection/start", {
+        method: "POST",
+      });
 
-  return data.ok;
-},
-  getDetectionStatus: () => request("/detection/status"),
+      return data.ok;
+    },
 
-  stopDetection: () => request("/detection/stop", { method: "POST" }),
+    processDetectionFrame: async (imageBlob) => {
+      const data = await request("/detection/frame", {
+        method: "POST",
+        headers: { "Content-Type": "image/jpeg" },
+        body: imageBlob,
+      });
+
+      return data.ok;
+    },
+
+    getDetectionStatus: async () => {
+      const data = await request("/detection/status");
+
+      return data;
+    },
+
+    stopDetection: async () => {
+      const data = await request("/detection/stop", {
+        method: "POST",
+      });
+
+      return data.ok;
+    },
 
   getVehicle: (licensePlate) => request(`/vehicles/${encodeURIComponent(licensePlate)}`),
 

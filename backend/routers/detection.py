@@ -1,31 +1,46 @@
-from fastapi import APIRouter, Request, HTTPException
-from services import detection
-from services import folder_path_service
+
+from fastapi import APIRouter, HTTPException, Request
+
+from LicensePlateDetector import Detector
+
 router = APIRouter()
+detection = Detector()
+
 
 @router.post("/api/detection/start")
-async def start_detection(request: Request):
+def start_detection():
+    try:
+        return detection.start_session()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/api/detection/frame")
+async def process_detection_frame(request: Request):
     image_bytes = await request.body()
 
-    if not image_bytes:
-        raise HTTPException(status_code=400, detail="No image received")
-
-    detection.start_detection(image_bytes)
-    return {"ok": True}
-
-
-@router.get("/api/detection/status")
-def detection_status():
-    return detection.get_status()
+    try:
+        return detection.process_frame(image_bytes)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/api/detection/stop")
 def stop_detection():
-    detection.stop_detection()
-    return {"ok": True}
+    try:
+        return detection.stop_session()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
-# for blob path
-@router.get("/api/detection/folder/{license_plate}")
-def blob_path(license_plate: str, action_subfolder: str, blob_folder: str):
-    return folder_path_service.create_folder_path(license_plate, action_subfolder, blob_folder)
 
+@router.get("/api/detection/status")
+def get_detection_status():
+    return detection.get_status()
