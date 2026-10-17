@@ -279,7 +279,7 @@ class Detector:
                     return buffer.tobytes()
                 return None
     
-    def decode_frame(image_bytes: bytes):
+    def decode_frame(self, image_bytes: bytes):
         """Decode JPEG bytes from the frontend into an OpenCV BGR frame."""
         if not image_bytes:
             raise ValueError("Received an empty image body.")
