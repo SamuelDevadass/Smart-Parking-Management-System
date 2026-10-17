@@ -96,7 +96,7 @@ func main() {
 	handlers.RegisterSpotHandler(api)
 
 	//reverse proxy detection router
-	handlers.RegisterDetectionHandler(api, python_url)
+	handlers.RegisterDetectionHandler(r, api, python_url)
 	handlers.RegisterVehicleEntryExitHandler(api, s3_client, bucket_name, supabase_s3_url, python_url, detection_base_path)
 	handlers.RegisterBillsHandler(api)
 	handlers.RegisterVideoHandler(r, python_url)

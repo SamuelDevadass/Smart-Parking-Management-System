@@ -72,13 +72,15 @@ getSpotAvailability: (wing) =>
   // DETECTION
   // ============================================================
 
-  startDetection: async () => {
-    const data = await request("/detection/start", {
-      method: "POST",
-    });
+  startDetection: async (imageBlob) => {
+  const data = await request("/detection/start", {
+    method: "POST",
+    headers: { "Content-Type": "image/jpeg" },
+    body: imageBlob,
+  });
 
-    return data.ok;
-  },
+  return data.ok;
+},
 
   getDetectionStatus: async () => {
     const data = await request("/detection/status");

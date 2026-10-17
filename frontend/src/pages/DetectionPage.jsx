@@ -10,32 +10,46 @@ export default function DetectionPage({ data, updateData, goTo }) {
   const videoRef = useRef(null);
   const [cameraError, setCameraError] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const canvasRef = useRef(null);
+  const runningRef = useRef(false);
 
   useEffect(() => {
-    let stream;
-    async function startCamera() {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "environment",
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-          },
-          audio: false,
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          setCameraReady(true);
-        }
-      } catch (err) {
-        setCameraError(`Could not access camera: ${err.message}`);
-      }
+  let stream;
+
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
+        audio: false,
+      });
+
+      const video = videoRef.current;
+      if (!video) throw new Error("Video element not found.");
+
+      video.srcObject = stream;
+
+      await new Promise((resolve, reject) => {
+        video.onloadedmetadata = resolve;
+        video.onerror = () => reject(new Error("Video failed to load."));
+      });
+
+      await video.play();
+      setCameraReady(true);
+    } catch (err) {
+      setCameraError(`Could not access camera: ${err.message}`);
     }
-    startCamera();
-    return () => {
-      stream?.getTracks().forEach((track) => track.stop());
-    };
-  }, []);
+  }
+
+  startCamera();
+
+  return () => {
+    stream?.getTracks().forEach((track) => track.stop());
+  };
+}, []);
 
   // Clear the plate field each time this page is shown, same as
   useEffect(() => 
@@ -43,17 +57,61 @@ export default function DetectionPage({ data, updateData, goTo }) {
     updateData({ licensePlate: "" });
   }, []);
   
+  async function encodeImage() 
+  {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.readyState < 2) 
+    {
+      throw new Error("Camera frame is not ready.");
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) =>
+          blob
+            ? resolve(blob)
+            : reject(new Error("Failed to encode camera frame.")),
+        "image/jpeg",
+        0.85
+      );
+    });
+  }
+
+
+  const sleep = (ms) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+  
   async function startDetection() 
   {
+    if (runningRef.current) return;
     setError(null);
-    try 
-    {
-      await Api.startDetection();
-      setRunning(true);
-    } 
-    catch (err) 
-    {
-      setError(err.message);
+    runningRef.current = true;
+    setRunning(true);
+
+    try {
+      while (runningRef.current) {
+        const imageBlob = await encodeImage();
+        const ok = await Api.startDetection(imageBlob);
+        if (!ok) 
+        {
+           throw new Error("Backend did not accept the camera frame.");
+        }
+        await sleep(350);
+      }
+    } catch (err) {
+      if (runningRef.current) {
+        setError(err.message);
+      }
+    } finally {
+      runningRef.current = false;
+      setRunning(false);
     }
   }
 
@@ -104,6 +162,14 @@ export default function DetectionPage({ data, updateData, goTo }) {
         {running ? "Detection running…" : "Idle"}
     </div>
     <div className="field">
+      <video
+  ref={videoRef}
+  autoPlay
+  muted
+  playsInline
+  style={{ display: "none" }}
+/>
+<canvas ref={canvasRef} hidden />
       <label>Live Camera Feed</label>
       <img src="/api/video"  alt={running ? "Live Detection Feed" : "Waiting for detection..."}
         style={{ width: "100%", maxWidth: "640px", border: "1px solid #ccc",
@@ -115,7 +181,7 @@ export default function DetectionPage({ data, updateData, goTo }) {
       )}
     </div>
     <div className="btn-row">
-      <button className="btn btn--primary" onClick={startDetection} disabled={running}>
+      <button className="btn btn--primary" onClick={startDetection} disabled={running || !cameraReady}>
         Start Detection </button>
       <button className="btn btn--danger" onClick={stopDetection} disabled={!running}>
         Stop Detection</button>

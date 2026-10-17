@@ -9,21 +9,27 @@
   the same origin, or set an env var here for an absolute backend URL.
 */
 
-async function request(path, options = {}) 
-{
-  const res = await fetch(`/api${path}`, 
-  {
-    headers: { "Content-Type": "application/json" },
+
+async function request(path, options = {}) {
+  const res = await fetch(`/api${path}`, {
     ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
-  if (!res.ok) 
-  {
+
+  if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`${options.method || "GET"} ${path} failed (${res.status}): ${text}`);
+    throw new Error(
+      `${options.method || "GET"} ${path} failed (${res.status}): ${text}`
+    );
   }
+
   if (res.status === 204) return null;
   return res.json();
 }
+
 
 export const Api = 
 {
@@ -33,8 +39,16 @@ export const Api =
 
   getSpotAvailability: (wing) => request(`/spots/availability?wing=${encodeURIComponent(wing)}`),
 
-  startDetection: () => request("/detection/start", { method: "POST" }),
+ 
+  startDetection: async (imageBlob) => {
+  const data = await request("/detection/start", {
+    method: "POST",
+    headers: { "Content-Type": "image/jpeg" },
+    body: imageBlob,
+  });
 
+  return data.ok;
+},
   getDetectionStatus: () => request("/detection/status"),
 
   stopDetection: () => request("/detection/stop", { method: "POST" }),
