@@ -3,6 +3,9 @@ from LicensePlateDetector import Detector
 
 _detector = None            # lazy-init — loading YOLO/OCR models is slow
 _stop_event = threading.Event()
+global _image_bytes
+"""needs global _image_bytes, otherwise _run_detection() reads the module-level value, 
+which is still None."""
 _thread: threading.Thread | None = None
 
 # Shared state read by GET /detection/status. Only ever written by
@@ -17,7 +20,7 @@ def _run_detection():
     try:
         if _detector is None:
             _detector = Detector()
-        text, folder_path = _detector.start(stop_event=_stop_event)
+        text, folder_path = _detector.start(image_bytes = _image_bytes, stop_event=_stop_event)
         _state["status"] = "done"
         _state["license_plate"] = (text or "").strip()
         _state["folder_path"] = folder_path
@@ -26,13 +29,14 @@ def _run_detection():
         _state["status"] = "error"
 
 
-def start_detection():
-    global _thread
+def start_detection(image_bytes: bytes):
+    global _thread, _image_bytes
     if _thread is not None and _thread.is_alive():
         return  # already running, ignore duplicate start
     _stop_event.clear()
     _state["status"] = "running"
     _state["license_plate"] = ""
+    _image_bytes = image_bytes
     _thread = threading.Thread(target=_run_detection, daemon=True)
     _thread.start()
 
@@ -50,6 +54,7 @@ def get_live_frame() -> bytes | None:
         return None
     return _detector.get_frame_bytes()
 
+"""Not used"""
 def process_frame(image_bytes: bytes):
     global _detector
     if _detector is None :

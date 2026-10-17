@@ -10,7 +10,7 @@ async def start_detection(request: Request):
     if not image_bytes:
         raise HTTPException(status_code=400, detail="No image received")
 
-    detection.process_frame(image_bytes)
+    detection.start_detection(image_bytes)
     return {"ok": True}
 
 

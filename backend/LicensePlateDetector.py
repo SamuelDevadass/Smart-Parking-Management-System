@@ -19,7 +19,7 @@ class LicensePlateDetection:
         self.easy_ocr_reader = easyocr.Reader(['en'], gpu=False)
         self.yolo_model = YOLO("yolo26n.pt")
         self.folder_path = None
-        self.camera = cv2.VideoCapture(0)
+        #self.camera = cv2.VideoCapture(0)
         self.latest_frame = None
         self.frame_lock = threading.Lock()
 
@@ -47,10 +47,11 @@ class LicensePlateDetection:
     def startup_check(self):
         """IMAGE CAPTURE PIPELINE"""
         # Get Camera
-        if not self.camera:
+        """if not self.camera:
             print("CAMERA not found\nExiting ... ")
             exit()
-        print("CAMERA available at : ",self.camera)
+        print("CAMERA available at : ",self.camera)"""
+        print("Camera obtained from frontend...")
 
         # Get Current Time for logging
         now = datetime.now()
@@ -66,6 +67,55 @@ class LicensePlateDetection:
         correct place no matter what"""
     """Cant do it because we need the final license plate from the frontend"""
 
+    # Main Driver to coordiante YOLO and image paths
+    def http_capture_with_yolo(self, frame, stop_event = None,):
+        print("Live video stream active ...")
+        cropped_car_capture = None
+        if stop_event is not None and stop_event.is_set():
+            print("Stop requested from GUI.")
+
+        # YOLO performed by process_frame()
+        processed_frame, cropped_car_capture = self.process_frame(frame)
+        
+        # Save images
+        current_path = os.path.join(self.folder_path, "Captured_Image.jpg") 
+        cv2.imwrite(current_path, processed_frame)
+        name_list = ["Captured_Image.jpg"]
+        self.display_image(image_name = "Captured_Image.jpg", title = "LIVE CAPTURED IMAGE")
+        if cropped_car_capture is not None:
+            current_path = os.path.join(self.folder_path, "Car_Crop_Capture.jpg")
+            cv2.imwrite(current_path, cropped_car_capture)
+            self.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
+            name_list.append("Car_Crop_Capture.jpg")
+                
+        cv2.destroyAllWindows()
+        return name_list
+
+    
+    # RUN YOLO ON DECODED IMAGE RECEIVED FROM FRONTEND
+    def process_frame(self, frame):
+        """Run YOLO on a browser-supplied frame and publish the annotated frame."""
+        processed_frame = frame.copy()
+        results = self.yolo_model(processed_frame, verbose=False)
+        for result in results:
+            for box in result.boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                conf = float(box.conf[0])
+                class_id = int(box.cls[0])
+                label = f"{result.names[class_id]} {conf:.2f}"
+                cv2.rectangle(processed_frame, (x1, y1), (x2, y2), (0, 255, 0), 2, )
+                cv2.putText(processed_frame, label, (x1, max(y1 - 10, 0)), 
+                            cv2.FONT_HERSHEY_SIMPLEX,0.5, (0, 255, 0), 2, )
+                
+                if conf > 0.65:
+                    car_x1, car_y1, car_x2, car_y2 = x1, y1, x2, y2
+                    cropped_car_capture = frame[car_y1:car_y2, car_x1:car_x2]
+        
+        with self.frame_lock:
+            self.latest_frame = processed_frame.copy()
+
+        return processed_frame, cropped_car_capture 
+    
     def video_capture_with_yolo(self, stop_event = None):
         """CAPTURE LIVE FEED"""
         print("Live video stream active. Press 'q' inside the window to exit.")
@@ -292,10 +342,13 @@ class Detector:
 
         return frame
 
-    def start(self, stop_event):
+    def start(self, image_bytes: bytes, stop_event):
         print("STARTING APPLICATION . . .")
         self.License_Plate_Detector.startup_check()
-        name_list = self.License_Plate_Detector.video_capture_with_yolo(stop_event)
+        #name_list = self.License_Plate_Detector.video_capture_with_yolo(stop_event)
+        """Decode and process one JPEG frame received from the frontend."""
+        frame = self.decode_frame(image_bytes)
+        name_list = self.License_Plate_Detector.http_capture_with_yolo(frame, stop_event)
         if len(name_list) > 1:
             image_name = name_list[1]
             text, detected = self.License_Plate_Detector.perform_ocr(image_name=image_name)
