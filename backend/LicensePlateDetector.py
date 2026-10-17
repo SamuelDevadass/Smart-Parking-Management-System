@@ -270,6 +270,7 @@ class Detector:
         self.License_Plate_Detector = LicensePlateDetection()
 
     def get_frame_bytes(self):
+            """Encode video bytes and send to frontend"""
             with self.License_Plate_Detector.frame_lock:
                 if self.License_Plate_Detector.latest_frame is None:
                     return None
@@ -277,6 +278,19 @@ class Detector:
                 if success:
                     return buffer.tobytes()
                 return None
+    
+    def decode_frame(image_bytes: bytes):
+        """Decode JPEG bytes from the frontend into an OpenCV BGR frame."""
+        if not image_bytes:
+            raise ValueError("Received an empty image body.")
+
+        encoded_image = np.frombuffer(image_bytes, dtype=np.uint8)
+        frame = cv2.imdecode(encoded_image, cv2.IMREAD_COLOR)
+
+        if frame is None:
+            raise ValueError("Could not decode image bytes. Expected a valid JPEG image.")
+
+        return frame
 
     def start(self, stop_event):
         print("STARTING APPLICATION . . .")

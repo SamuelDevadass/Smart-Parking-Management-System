@@ -49,3 +49,11 @@ def get_live_frame() -> bytes | None:
     if _detector is None :
         return None
     return _detector.get_frame_bytes()
+
+def process_frame(image_bytes: bytes):
+    global _detector
+    if _detector is None :
+        return None
+    frame = _detector.decode_frame(image_bytes)
+    # Next step: pass frame to your detector for YOLO processing.
+    return frame
