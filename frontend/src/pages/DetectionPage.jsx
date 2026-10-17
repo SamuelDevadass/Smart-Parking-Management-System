@@ -1,11 +1,41 @@
-import { useState, useEffect } from "react";
+//Request camera in frontend
+import { useState, useEffect, useRef } from "react";
 import { Api } from "../api/client.js";
 import PlateChip from "../components/PlateChip.jsx";
 
-export default function DetectionPage({ data, updateData, goTo }) 
-{
+export default function DetectionPage({ data, updateData, goTo }) {
+  
   const [running, setRunning] = useState(false);
   const [error, setError] = useState(null);
+  const videoRef = useRef(null);
+  const [cameraError, setCameraError] = useState(null);
+  const [cameraReady, setCameraReady] = useState(false);
+
+  useEffect(() => {
+    let stream;
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "environment",
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
+          audio: false,
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          setCameraReady(true);
+        }
+      } catch (err) {
+        setCameraError(`Could not access camera: ${err.message}`);
+      }
+    }
+    startCamera();
+    return () => {
+      stream?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   // Clear the plate field each time this page is shown, same as
   useEffect(() => 
