@@ -20,11 +20,11 @@ async function request(path, options = {}) {
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(
-      `${options.method || "GET"} ${path} failed (${res.status}): ${text}`
-    );
-  }
+  const message = await res.text();
+  const error = new Error(message || `Request failed: ${res.status}`);
+  error.status = res.status;
+  throw error;
+}
 
   if (res.status === 204) return null;
   return res.json();
