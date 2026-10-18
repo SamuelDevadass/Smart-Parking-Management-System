@@ -23,16 +23,16 @@ class LicensePlateDetection:
         self.latest_frame = None
         self.frame_lock = threading.Lock()
     
-    def startup_check(self):
-        """Initialize a scan session without opening a camera."""
-        os.makedirs("scans", exist_ok=True)
-        now = datetime.now()
-        self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S")
-        # Avoid a collision if two sessions start within the same second.
-        os.makedirs(self.folder_path, exist_ok=False)
-        with self.frame_lock:
-            self.latest_frame = None
-        print(f"Detection session started: {self.folder_path}")
+    # def startup_check(self):
+    #     """Initialize a scan session without opening a camera."""
+    #     os.makedirs("scans", exist_ok=True)
+    #     now = datetime.now()
+    #     self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S")
+    #     # Avoid a collision if two sessions start within the same second.
+    #     os.makedirs(self.folder_path, exist_ok=False)
+    #     with self.frame_lock:
+    #         self.latest_frame = None
+    #     print(f"Detection session started: {self.folder_path}")
 
 
 
@@ -55,23 +55,23 @@ class LicensePlateDetection:
         with self.frame_lock:
             self.latest_frame = None
 
-    # def startup_check(self):
-    #     """IMAGE CAPTURE PIPELINE"""
-    #     # Get Camera
-    #     """if not self.camera:
-    #         print("CAMERA not found\nExiting ... ")
-    #         exit()
-    #     print("CAMERA available at : ",self.camera)"""
-    #     print("Camera obtained from frontend...")
+    def startup_check(self):
+        """IMAGE CAPTURE PIPELINE"""
+        # Get Camera
+        """if not self.camera:
+            print("CAMERA not found\nExiting ... ")
+            exit()
+        print("CAMERA available at : ",self.camera)"""
+        print("Camera obtained from frontend...")
 
-    #     # Get Current Time for logging
-    #     now = datetime.now()
-    #     print("Current Time: ", now)
-    #     #create scans folder if doesnt exist
-    #     os.makedirs("scans", exist_ok = True)
-    #     # New repository for current cycle
-    #     self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S") # os.mkdir() returns None hence create path as string and then create folder
-    #     os.mkdir(self.folder_path)
+        # Get Current Time for logging
+        now = datetime.now()
+        print("Current Time: ", now)
+        #create scans folder if doesnt exist
+        os.makedirs("scans", exist_ok = True)
+        # New repository for current cycle
+        self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S") # os.mkdir() returns None hence create path as string and then create folder
+        os.mkdir(self.folder_path)
 
     """Instead of creating final folder path somewhere else later
         Create it here itself so the image is always at the 
