@@ -19,9 +19,11 @@ async function request(path, options = {}) {
   });
 
   if (!res.ok) {
-    const message = await res.text();
-    throw new Error(message || `Request failed: ${res.status}`);
-  }
+  const message = await res.text();
+  const error = new Error(message || `Request failed: ${res.status}`);
+  error.status = res.status;
+  throw error;
+}
 
   return res.json();
 }

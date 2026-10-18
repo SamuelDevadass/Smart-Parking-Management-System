@@ -18,15 +18,19 @@ export default function EntryExitPage({ data, updateData, goTo })
       .catch((err) => setError(err.message));
   }
 
-  useEffect(() => 
-  { setSelectedKey("");
+    
+  useEffect(() => {
+    setSelectedKey("");
+    setOccupiedSpot(null);
     updateData({ floor: null, spotNumber: null });
+
     loadSpots();
-    /*if (data.licensePlate)
-    {
+
+    if (data.licensePlate) {
       getSpot();
-    }*/
-  }, [data.size, data.licensePlate],);
+    }
+  }, [data.size, data.licensePlate]);
+
 
   function handleSelect(e) 
   {
@@ -35,6 +39,32 @@ export default function EntryExitPage({ data, updateData, goTo })
     const spot = spots.find((s) => `${s.floor}-${s.spot_number}` === key);
     if (spot) updateData({ floor: spot.floor, spotNumber: spot.spot_number });
   }
+  
+async function getSpot() {
+  try {
+    const result = await Api.getSpot(data.licensePlate);
+
+    if (result.status) {
+      // Existing session: show the occupied spot.
+      setOccupiedSpot(result.spot_number);
+      setSelectedKey(`occupied-${result.spot_number}`);
+    } else {
+      // No active session: allow a new entry.
+      setOccupiedSpot(null);
+      setSelectedKey("");
+    }
+  } catch (err) {
+    if (err.status === 404) {
+      // 404 means no active session for this vehicle.
+      setOccupiedSpot(null);
+      setSelectedKey("");
+      return;
+    }
+
+    setError(err.message);
+  }
+}
+
 
   async function markEntry() 
   {
@@ -53,27 +83,17 @@ export default function EntryExitPage({ data, updateData, goTo })
     }
   }
 
-  async function getSpot() 
-  {
-  try 
-  {
-    const result = await Api.getSpot(data.licensePlate);
+useEffect(() => {
+  setSelectedKey("");
+  setOccupiedSpot(null);
+  updateData({ floor: null, spotNumber: null });
 
-    if (result.status) 
-    {
-      setOccupiedSpot(result.spot_number);
-      setSelectedKey(`occupied-${result.spot_number}`);
-    } 
-    else 
-    {
-      setOccupiedSpot(null);
-    }
-  } 
-  catch (err) 
-  {
-    setError(err.message);
+  loadSpots();
+
+  if (data.licensePlate) {
+    getSpot();
   }
-}
+}, [data.size, data.licensePlate]);
 
   async function markExit() {
   setError(null);
