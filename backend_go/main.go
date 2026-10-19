@@ -26,9 +26,8 @@ func main() {
 
 	//Load environment variables
 	log.Println("Attempting to load env ...")
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Fatalf("Failed to load env...\nError: %v", err)
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found; using environment variables")
 	}
 	backend_url := os.Getenv("BACKEND_URL")
 	accessKey := os.Getenv("SUPABASE_S3_ACCESS_KEY")
@@ -104,8 +103,10 @@ func main() {
 	// 5. LISTEN AND SERVE
 	log.Printf("Server running on http://%s", backend_url)
 	log.Printf("OpenAPI UI available at http://%s/docs", backend_url)
-	err = http.ListenAndServe(backend_url, r)
-	if err != nil {
-		log.Fatalf("Server crashed: %v", err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
 	}
+	log.Fatal(http.ListenAndServe(":"+port, r))
+
 }
