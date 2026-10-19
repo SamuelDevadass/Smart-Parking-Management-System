@@ -12,6 +12,8 @@ import cv2
 from PIL import Image, ImageTk, ImageFilter, ImageDraw, ImageEnhance
 from rapidocr_onnxruntime import RapidOCR
 from ultralytics import YOLO
+model = YOLO("yolo26n.pt")
+model.export(format="onnx")  # Creates yolo26n.onnx
 # from tkinter import *
 # from PIL import Image, ImageTk, ImageFilter, ImageDraw, ImageEnhance
 # import easyocr
@@ -22,7 +24,8 @@ class LicensePlateDetection:
     def __init__(self):
         """GLOBAL INITIALIZATIONS"""
         self.rapid_ocr_engine = RapidOCR()
-        self.yolo_model = YOLO("yolo26n.pt")
+        self.yolo_model = model
+        self.yolo_model.export(format="onnx")
         self.folder_path = None
         self.latest_frame = None
         self.frame_lock = threading.Lock()
@@ -427,19 +430,19 @@ class Detector:
             final_frame, final_crop = detector.process_frame_using_yolo(self.latest_raw_frame)
             captured_path = os.path.join(folder, "Captured_Image.jpg")
             cv2.imwrite(captured_path, final_frame)
-            detector.display_image(image_name = "Captured_Image.jpg", title = "LIVE CAPTURED IMAGE")
+            #detector.display_image(image_name = "Captured_Image.jpg", title = "LIVE CAPTURED IMAGE")
 
             # Prefer the most recent crop from the processed frames.
             crop = self.latest_crop if self.latest_crop is not None else final_crop
             if crop is not None and crop.size > 0:
                 crop_path = os.path.join(folder, "Car_Crop_Capture.jpg")
                 cv2.imwrite(crop_path, crop)
-                detector.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
+                #detector.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
                 text, detected = detector.perform_ocr(crop_image_name="Car_Crop_Capture.jpg", captured_image_name = "Captured_Image.jpg")
             else:
                 # Preserve your existing preprocessing/OCR fallback.
                 final_name, final_result = detector.image_processing_pipeline(image_name="Captured_Image.jpg")
-                detector.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
+                #detector.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
                 text, detected = detector.perform_ocr(crop_image_name="Car_Crop_Capture.jpg", captured_image_name = "Captured_Image.jpg", image_array=final_result)
 
             self.result = {"status": "done", 
@@ -456,4 +459,4 @@ class Detector:
 
 if __name__ == "__main__":
     app = Detector()
-    text, app.License_Plate_Detector.folder_path = app.start_session(stop_event=None)
+    text, app.License_Plate_Detector.folder_path = app.start_session()
