@@ -60,42 +60,48 @@ class LicensePlateDetection:
             self.latest_frame = processed_frame.copy()
         return processed_frame, cropped_car_capture 
 
-    def perform_ocr(self, crop_image_name:str, captured_image_name:str, image_array: Optional[Any] = None):
-        """OCR PIPELINE"""
-        if os.path.exists(os.path.join(self.folder_path,f"{crop_image_name}")):
-            image = Image.open(os.path.join(self.folder_path, f"{crop_image_name}"))
-        else:
-                image = Image.fromarray(cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB))
-        # PERFORM OCR ON THE CROPPED IMAGE
-        detected = False
-        text = ""
-        try:
-            results, _ = self.rapid_ocr_engine(image)
-            if not results:
-                print("No text in cropped zone")
-            text = " ".join([line[1] for line in results])
-            print(f"RAPIDOCR SUCCESS: {text}")
-            detected = True
-            
-        except Exception:
-            print("RapidOCR high-speed pass failed. Trying Deep Learning EasyOCR on cropped zone...")
-            if os.path.exists(os.path.join(self.folder_path,f"{captured_image_name}")):
-                image = Image.open(os.path.join(self.folder_path, f"{captured_image_name}"))
+    def perform_ocr(self, crop_image_name: str, captured_image_name: str, image_array: Optional[Any] = None):
+            """OCR PIPELINE"""
+            if os.path.exists(os.path.join(self.folder_path, f"{crop_image_name}")):
+                image = Image.open(os.path.join(self.folder_path, f"{crop_image_name}"))
             else:
                 image = Image.fromarray(cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB))
-            # PERFORM OCR ON THE CAPTURED IMAGE
             detected = False
             text = ""
-            results, _ = self.rapid_ocr_engine(image)
-            if not results:
-                text = "Enter License Number Manually"
-                detected = False
-                print("No text in cropped zone")
-            else:
+            try:
+                # Safely call RapidOCR
+                ocr_output = self.rapid_ocr_engine(image)
+                results = ocr_output[0] if ocr_output else None
+                if not results:
+                    print("No text in cropped zone")
+                    raise ValueError("No text detected")
                 text = " ".join([line[1] for line in results])
                 print(f"RAPIDOCR SUCCESS: {text}")
                 detected = True
-        return text, detected
+                
+            except Exception:
+                print("RapidOCR high-speed pass failed. Trying fallback on captured image...")
+                if os.path.exists(os.path.join(self.folder_path, f"{captured_image_name}")):
+                    image = Image.open(os.path.join(self.folder_path, f"{captured_image_name}"))
+                else:
+                    image = Image.fromarray(cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB))
+                try:
+                    ocr_output = self.rapid_ocr_engine(image)
+                    results = ocr_output[0] if ocr_output else None
+                    if not results:
+                        text = "Enter License Number Manually"
+                        detected = False
+                        print("No text in captured zone either")
+                    else:
+                        text = " ".join([line[1] for line in results])
+                        print(f"RAPIDOCR FALLBACK SUCCESS: {text}")
+                        detected = True
+                except Exception as e:
+                    print(f"Fallback OCR error: {e}")
+                    text = "Enter License Number Manually"
+                    detected = False
+
+            return text, detected
     
     def image_processing_pipeline(self, image_name: str):
         # A. Try Pillow
