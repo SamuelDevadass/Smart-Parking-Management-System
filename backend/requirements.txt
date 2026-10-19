@@ -5,5 +5,5 @@ Pillow==13.0.0
 python-dotenv==1.2.4
 rapidocr_onnxruntime==1.2.3
 supabase==2.33.0
-ultralytics==8.4.90
+ultralytics-opencv-headless==8.4.182
 uvicorn==0.54.0
