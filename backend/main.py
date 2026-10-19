@@ -2,7 +2,8 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from routers import wings, spots, detection, vehicles_entry_exit, bills, video
+#from routers import wings, spots, detection, vehicles_entry_exit, bills, video
+from routers import detection, video
 from dotenv import load_dotenv
 import os, uvicorn
 load_dotenv("./.env")
@@ -21,12 +22,12 @@ app.add_middleware(CORSMiddleware,
 # ---------------------------------------------------------------------------
 # Wings
 # ---------------------------------------------------------------------------
-app.include_router(wings.router)
+#app.include_router(wings.router)
 
 # ---------------------------------------------------------------------------
 # Spot availability
 # ---------------------------------------------------------------------------
-app.include_router(spots.router)
+#app.include_router(spots.router)
 
 # ---------------------------------------------------------------------------
 # Detection
@@ -36,12 +37,12 @@ app.include_router(detection.router)
 # ---------------------------------------------------------------------------
 # Vehicles / owners & Entry / exit
 # ---------------------------------------------------------------------------
-app.include_router(vehicles_entry_exit.router)
+#app.include_router(vehicles_entry_exit.router)
 
 # ---------------------------------------------------------------------------
 # Billing
 # ---------------------------------------------------------------------------
-app.include_router(bills.router)
+#app.include_router(bills.router)
 
 # ---------------------------------------------------------------------------
 # Video Feed

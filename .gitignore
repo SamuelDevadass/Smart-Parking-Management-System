@@ -9,6 +9,7 @@ frame*.jpg
 .vscode/
 __pycache__/
 backend/yolo26n.pt
+backend/yolo26n.onnx
 
 # React ignores
 ## Logs

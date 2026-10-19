@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Optional
 from datetime import datetime
 from dotenv import load_dotenv
@@ -45,6 +46,7 @@ def create_folder_path(license_number: str, action_subfolder: str, blob_folder) 
 
     print("Upload succeeded")
     # add cleanup here
+    shutil.rmtree(folder_path_raw)
     direct_path = os.getenv("SUPABASE_WEB_VIEW_PREFIX")+vehicle_time
     return direct_path
     
