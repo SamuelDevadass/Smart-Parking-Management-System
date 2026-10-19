@@ -107,6 +107,8 @@ func main() {
 	if port == "" {
 		port = "8000"
 	}
-	log.Fatal(http.ListenAndServe(":"+port, r))
-
+	err = http.ListenAndServe(":"+port, r)
+	if err != nil {
+		log.Fatalf("HTTP server failed: %v", err)
+	}
 }
