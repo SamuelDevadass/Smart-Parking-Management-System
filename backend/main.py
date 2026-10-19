@@ -15,7 +15,7 @@ app = FastAPI(title="Smart Parking Management System API")
 # allow it here. In production, tighten allow_origins to your real domain.
 app.add_middleware(CORSMiddleware,
                     #allow_origins=[f"{os.getenv("FRONTEND_URL")}"],
-                    allow_origins=["http://127.27.27.27:8000"],
+                    allow_origins=[os.getenv("BACKEND_URL")],
                     allow_methods=["*"],
                     allow_headers=["*"],)
 

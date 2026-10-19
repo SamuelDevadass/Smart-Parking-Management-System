@@ -1,7 +1,6 @@
 fastapi==0.148.0
 numpy==2.5.4
-#opencv_python==5.0.0.93
-opencv_python_headless==5.0.0.93
+opencv-python-headless==5.0.0.93
 Pillow==13.0.0
 python-dotenv==1.2.4
 rapidocr_onnxruntime==1.2.3
