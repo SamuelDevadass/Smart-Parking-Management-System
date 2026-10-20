@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://perceptive-fulfillment-production-18aa.up.railway.app"
+      "destination": "https://perceptive-fulfillment-production-18aa.up.railway.app/api"
     }
   ]
 }
