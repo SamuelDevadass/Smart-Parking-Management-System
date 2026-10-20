@@ -10,7 +10,10 @@
 
 
 async function request(path, options = {}) {
-  const res = await fetch(`/api${path}`, {
+  const url = `/api${path}`;
+  console.log("API REQUEST:", url);
+
+  const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -19,11 +22,13 @@ async function request(path, options = {}) {
   });
 
   if (!res.ok) {
-  const message = await res.text();
-  const error = new Error(message || `Request failed: ${res.status}`);
-  error.status = res.status;
-  throw error;
-}
+    const message = await res.text();
+    console.error("API ERROR:", res.status, message);
+
+    const error = new Error(message || `Request failed: ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
 
   return res.json();
 }
