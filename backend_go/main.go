@@ -40,6 +40,7 @@ func main() {
 	detection_base_path := os.Getenv("DETECTION_BASE_PATH")
 	//connection_string := os.Getenv("DB_URL")
 	connection_string := os.Getenv("DB_URL_SUPABASE")
+	frontend_url := os.Getenv("FRONTEND_URL")
 	log.Println("Environment Variables Configured successfully...")
 
 	//Initialize connection to DB
@@ -61,7 +62,7 @@ func main() {
 	//CORS
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // frontend URL
+			w.Header().Set("Access-Control-Allow-Origin", frontend_url) // frontend URL
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
