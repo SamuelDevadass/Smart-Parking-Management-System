@@ -15,7 +15,9 @@
 
 ### ARCHITECTURE DIAGRAM
 
-![alt text](<ARCHITECTURE.png>)
+<img width="1037" height="579" alt="ARCHITECTURE DIAGRAMS-DISTRIBUTED DEPLOYMENT drawio (1)" src="https://github.com/user-attachments/assets/226166c9-4cb7-41af-bb7e-1ed1337749c7" />
+
+### DISTRIBUTED DEPLOYMENT
 
 
 | Component | Tech Stack | Platform | Location |
