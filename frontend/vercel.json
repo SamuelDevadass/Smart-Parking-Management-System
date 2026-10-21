@@ -3,11 +3,11 @@
   "rewrites": [
     {
       "source": "/api/:wing/spots/available/",
-      "destination": "https://perceptive-fulfillment-production-18aa.up.railway.app/api/:wing/spots/available/"
+      "destination": "<deployed-railway-url>/api/:wing/spots/available/"
     },
     {
       "source": "/api/:path*",
-      "destination": "https://perceptive-fulfillment-production-18aa.up.railway.app/api/:path*"
+      "destination": "<deployed-railway-url>/api/:path*"
     }
   ]
 }

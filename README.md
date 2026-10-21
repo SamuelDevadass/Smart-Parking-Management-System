@@ -18,33 +18,38 @@
 <img width="982" height="457" alt="image" src="https://github.com/user-attachments/assets/abb04c1d-6a95-4990-8ac3-594ddbcd18b9" />
 
 
-| Component | Tech Stack | Deployed At |
-| :--- | :--- | :--- |
-| **Frontend** | React | Vercel |
-| **API Layer** | Go Huma | Railway |
-| **Backend** | Reverse Proxy (Go to FastAPI) | Railway |
-| **Database** | PostgreSQL + PGX | Supabase |
-| **Capture** | Blob Storage | Supabase Blob with S3 configuration |       
+| Component | Tech Stack | Platform | Location |
+| :--- | :--- | :--- | :--- |
+| **Frontend** | React | Vercel | Washington, D.C. , USA |
+| **API Layer** | Go Huma | Railway | Northern Virginia, USA |
+| **Backend** | Reverse Proxy (Go to FastAPI) | Railway | Northern Virginia, USA |
+| **Database** | PostgreSQL + PGX | Supabase | Singapore, Asia Pacific |
+| **Capture** | Blob Storage | Supabase Blob with S3 configuration | Singapore, Asia Pacific |      
 
 ## Video Walkthrough
 
-[![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/7mYoQlRec2c)](https://youtu.be/7mYoQlRec2c)
+[![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/7mYoQlRec2c)](https://www.youtube.com/watch?v=gi900gtaSpA)
 
 ## FEATURED UPDATES
 
-API Layer : FastApi + Python --> Golang Huma + Reverse Proxy to FastAPI
+API Layer : FastApi + Python --> Go Huma-Chi + Reverse Proxy to FastAPI
 
-Database  : Python + psycopg --> Golang + pgx
+Database  : Python + psycopg --> Go + pgx
+
+Blob      : Supabase Storage
+
 
 -----------------------------------------------------------------------------------------------------
 
 ## IMPROVEMENTS OVER FULLSTACK WEB APPLICATION
 
-i. Create structured folder path ordered by date of capture files and log them in Database
+i. Frontend requests for camera access and sends frames to backend over http at regular intervals
 
-ii. Added stric type based checking in compliance with standard Go norms
 
-iii. Auto generated Huma OpenAPI documentation for efficient testing 
+ii. Modified backend to use strictly headless libraries & functions, and avoid GUI based methods 
+
+
+iii. Create a structured path for uploaded capture files to the Blob Storage 
 
 -----------------------------------------------------------------------------------------------------
 
@@ -52,7 +57,7 @@ iii. Auto generated Huma OpenAPI documentation for efficient testing
 
 Normalized upto BCNF
 
-Deployed to SupaBase, existed data exported to SupaBase DB
+Deployed to SupaBase, existing data exported to SupaBase DB
 
 Implemented using PostGreSQL and PGX with Go
 
@@ -67,24 +72,28 @@ Supports comprehensive logging for robust performance
 
 ### FRONTEND
 
-Implemented using React 
+Implemented using React + Vite
 
 Designed to support multiple pages dedicated to specific user activities
     
-    Eg: Choose Wing
+        Choose Wing
         Automatic License Number Plate Detection
         Input User Details
         Mark Entry/Exit
         Generate Bill 
 Supports Interactive design for enhanced efficiency
 
-### BACKEND 
+Ensure the vercel.json has the path forwading rules for vercel to correctly redirect the requests
+
+### BACKEND - GO: HUMA-CHI
 
 Implemented using Go Huma with Reverse Proxy to FastAPI
 
 Designed to support secure REST APIs for backend endpoints 
 
-    Eg: /api/wings
+Supports Fixed Request and Response models defined in Go for better security over HTTP transfers
+
+        /api/wings
         /api/spots/
         /api/detection/ --> Reverse Proxy to FastAPI
         /api/vehicles/
@@ -92,13 +101,36 @@ Designed to support secure REST APIs for backend endpoints
         /api/exits/
         /api/bills/
         /api/video/     --> Reverse Proxy to FastAPI  
-Supports Fixed Input and Response models defined in Go for better security over HTTP messages
+
+
+### BACKEND - PYTHON: FASTAPI - REVERSE PROXY 
+
+Shifted Camera request and capture module to Frontend
+
+
+Removed all GUI-based function calls & libraries for a headless deployment 
+
+
+Removed EasyOCR and added ONNX file for the YOLO model for a comapct, lightweight deployment
+
+
+Receives image-bytes from frontend over http. 
+
+
+Decodes the image, applies YOLO annotations and resends the image-bytes to frontend ove http
+
+
+Performs OCR on the last captured image and sends results to frontend, while uploading the images to Blob
+
+        /api/detection/ 
+        /api/video/     
+
 
 ### AUTOMATIC LICENSE PLATE DETECTION
 
 Integrated YOLO_Monolith for Automatic License Number Detection
 
-Implemented using YOLO, OpenCV, EasyOCR and Pillow
+Implemented using YOLO-Headless, OpenCV-Headless, RapidOCR and Pillow
 
 Includes automatic fallbacks with custom image enhancement pipeline against confidence score checks
 
@@ -109,7 +141,7 @@ Includes automatic fallbacks with custom image enhancement pipeline against conf
 
 #### Tools and Technologies
 
-PostgreSQL, Pgx, Go Huma, YOLO, EasyOCR, OpenCV, Pillow, RapidOCR
+PostgreSQL, Pgx, Go Huma, YOLO, OpenCV, Pillow, RapidOCR
 
 #### CONFIGURATIONS
 
@@ -121,7 +153,7 @@ i. Folder Structure
     -   README.md
     -   LICENSE
     -   requirements.txt
-    -   requirements.bak
+    -   requirements.all
     +---.vscode/
            settings.json
     +---frontend/
@@ -129,6 +161,7 @@ i. Folder Structure
         -   index.html
         -   package-lock.json
         -   package.json
+        -   vercel.json
         -   vite.config.js
         +---node_modules/
         +---public/
@@ -140,6 +173,7 @@ i. Folder Structure
             -   main.jsx  
             +---api/
                 -   client.js
+                -   client-fastapi.js
             +---components/
                 -   PlateChip.jsx
                     StepBar.jsx       
@@ -151,24 +185,24 @@ i. Folder Structure
                 -   OwnerDetailsPage.jsx
                 -   SelectWingPage.jsx
     +---backend/
-        -   LicensePlateDetector.py
-        -   schemas.py
-        -   yolo26n.pt
         +---routers/
-            -   bills.py
             -   detection.py
-            -   spots.py
-            -   vehicles_entry_exit.py
             -   video.py
-            -   wings.py
         +---scans/
+        +---capture_log/
             -   <timestampted folders of captures>
         +---services/
-            -   billing.py
-            -   db.py
             -   detection.py
+            -   folder_path_service.py
+        -   schemas.py
+        -   yolo26n.pt
+        -   yolo26n.onnx
+        -   requirements.txt
+        -   requirements.all
+        -   LicensePlateDetector.py
     +---backend_go/
         +---catpure_log/
+            -   <timestampted folders of captures>
         +---handlers/   
             +---wings/
                 -   wings.go
@@ -185,7 +219,16 @@ i. Folder Structure
         +---services/
         -   billing.go
         -   detection_status.go
+        -   blob_service_s3.go        
+    -   go.mod
+    -   go.sum
+    -   main.exe
+    -   main.go
     +---db/
+    +---supabase/
+        -   .sql
+        -   SUPABASE_SCHEMA.png
+        -   SUPABASE_SCHEMA.svg
     -   .sql
     -   ER DIAGRAM.jpg
     -   FINAL SCHEMA (BCNF).png       
@@ -193,16 +236,10 @@ i. Folder Structure
 
 ii. Environment Variables
     
-Configure following variables to configure the environment:
+Configure the variables from the env.sample file to setup the environment:
         
-        DB_NAME=
-        DB_USER=
-        DB_PW=
-        DB_HOST=
-        FRONTEND_URL=
-        VITE_BACKEND_URL=
-        BACKEND_URL=
-        DB_URL=
+For local setup: Ensure the fastapi and huma-chi backends run on diffent port numbers to be accessible correctly on localhost
+
 
 iii. Environment Setup
     
@@ -220,7 +257,12 @@ iii. Environment Setup
 
     pip install -r requirements.txt
 
-  - (Incase required, install other requirements from requirements.bak file)
+  - (Incase required, install other requirements from requirements.all file)
+
+  -> Navigate to backend_go and install requirements using command:
+
+    go mod download
+    go mod tidy
 
 -> Navigate to frontend and install requirements using command:
 
@@ -229,6 +271,8 @@ iii. Environment Setup
 -> Implement the DB using postgresql with the SQL from ./db/.sql
     
    - Refer to diagrams in ./db and issues for detailed Schema and ER diagram
+
+   - Can also refer to the supabase/ subfolder to implement / migrate the database on Supabase
     
 -> Run the application:
 
