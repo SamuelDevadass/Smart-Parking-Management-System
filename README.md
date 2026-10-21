@@ -32,11 +32,11 @@
 
 ## FEATURED UPDATES
 
-API Layer : FastApi + Python --> Go Huma-Chi + Reverse Proxy to FastAPI
+API Layer  : FastApi + Python --> Go Huma-Chi + Reverse Proxy to FastAPI
 
-Database  : Python + psycopg --> Go + pgx
+Database   : Python + psycopg --> Go + pgx
 
-Blob      : Supabase Storage
+Blob       : Supabase Storage
 
 
 -----------------------------------------------------------------------------------------------------
