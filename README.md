@@ -15,7 +15,7 @@
 
 ### ARCHITECTURE DIAGRAM
 
-<img width="982" height="457" alt="image" src="https://github.com/user-attachments/assets/abb04c1d-6a95-4990-8ac3-594ddbcd18b9" />
+![alt text](<ARCHITECTURE.png>)
 
 
 | Component | Tech Stack | Platform | Location |
