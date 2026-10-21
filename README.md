@@ -30,7 +30,7 @@
 
 ## Video Walkthrough
 
-[![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/7mYoQlRec2c)](https://www.youtube.com/watch?v=gi900gtaSpA)
+[![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/gi900gtaSpA)](https://www.youtube.com/watch?v=gi900gtaSpA)
 
 ## FEATURED UPDATES
 
