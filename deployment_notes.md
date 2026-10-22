@@ -1,3 +1,49 @@
+1. VERCEL FRONTEND DEPLOYMENT
+
+TASKS, COMMANDS, CONFIGURAIONS
+
+DESCRIBE THE VERCEL.JSON ISSUE AND FIX
+
+DEPLOYED DASHBOARD
+
+
+ANALYTICS
+
+
+2. RAILWAY PYTHON
+
+Make the backend truly headless, how we removed / replaced GUI based libraries for headless versions
+
+CONFIGURATIONS 
+
+DESCRIBE THE NEED TO MOVE TO ONNX & MEMORY PROBLEM
+GET DYNAMIC PORT & ASSIGN IT
+ALLOW OUTBOUND IPV6
+
+DEPLOYED DOCS
+
+ANALYTICS
+
+3. RAILWYAY GO 
+
+CONFIGS
+
+PORT PROBLEM
+
+OUTBOUT IPV6
+
+GO REROUTING FOR THE / AFTER .app
+
+
+4. SUPABASE DB DEPLOYMENT AND USAGE 
+
+
+5. ANALYTICS & OBSERVABILITY
+
+
+
+
+
 Absolutely 😭 No celebrations until we have the deployment and debugging log written down. Let's make this a proper checklist you can keep for your M.Tech project documentation, future debugging, and deployment reproducibility.
 
 I'll separate confirmed fixes, workarounds/configuration changes, and verification checks so we don't accidentally record a suspected cause as a proven fact.
