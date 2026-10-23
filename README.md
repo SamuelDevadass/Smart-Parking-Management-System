@@ -28,6 +28,10 @@
 | **Database** | PostgreSQL + PGX | Supabase | Singapore, Asia Pacific |
 | **Capture** | Blob Storage | Supabase Blob with S3 configuration | Singapore, Asia Pacific |      
 
+
+Refer to <a href = "https://github.com/SamuelDevadass/Smart-Parking-Management-System/blob/FullstackWebApplication_Go/Deployment%20Notes.md"> Deployment Notes </a> for a detailed overview of deployment cofigurations and setup instructions.
+
+
 ## Video Walkthrough
 
 [![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/gi900gtaSpA)](https://www.youtube.com/watch?v=gi900gtaSpA)

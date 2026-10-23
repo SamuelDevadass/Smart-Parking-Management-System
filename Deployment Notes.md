@@ -1,5 +1,19 @@
 # Smart Parking Management System — Deployment Documentation
 
+<img width="1920" height="1020" alt="Screenshot 2026-10-22 195934" src="https://github.com/user-attachments/assets/e710259f-ab6b-4ec0-89ed-f34ee4687a2f" />
+
+
+### DISTRIBUTED DEPLOYMENT
+
+
+| Component | Tech Stack | Platform | Location |
+| :--- | :--- | :--- | :--- |
+| **Frontend** | React | Vercel | Washington, D.C. , USA |
+| **API Layer** | Go Huma | Railway | Northern Virginia, USA |
+| **Backend** | Reverse Proxy (Go to FastAPI) | Railway | Northern Virginia, USA |
+| **Database** | PostgreSQL + PGX | Supabase | Singapore, Asia Pacific |
+| **Capture** | Blob Storage | Supabase Blob with S3 configuration | Singapore, Asia Pacific |     
+
 # 1. Vercel Frontend Deployment
 
 ## 1.1 Tasks, Commands and Configurations
@@ -18,7 +32,7 @@ The root directory was configured explicitly because the frontend resides in a s
 
 The deployed production URL was: `https://parking-system-eta.vercel.app`
 
-![alt text](<Screenshot 2026-10-22 201430.png>)
+<img width="1920" height="1080" alt="Vercel dashboard" src="https://github.com/user-attachments/assets/e9fa13fe-c04b-413b-937a-2b75cf67b613" />
 
 
 ## 1.2 The Vercel Routing Issue and Fix
@@ -72,7 +86,7 @@ The explicit rule forwards the available-spots path to the corresponding Railway
 
 # Railway Deployment
 
-![alt text](<Screenshot 2026-10-20 180428.png>)
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/76c6c28d-f36e-40fd-a1ed-fd763b7ab8e3" />
 
 # 2. Railway Python Backend Deployment
 
@@ -86,7 +100,7 @@ Observed production service URL:
 
 `https://smart-parking-management-system-production-feeb.up.railway.app`
 
-![alt text](<Screenshot 2026-10-22 201208.png>)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/f5baff7d-9ccf-4f64-ae22-e9a9b396708e" />
 
 ## 2.2 Making the Backend Truly Headless
 
@@ -206,7 +220,8 @@ The service's documentation URL was:
 
 `https://smart-parking-management-system-production-feeb.up.railway.app/docs`
 
-![alt text](<Screenshot 2026-10-22 195516.png>)
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/17a03ac1-3fc2-4758-9f29-eb646f359f12" />
+
 
 # 3. Railway Go Backend Deployment
 
@@ -245,7 +260,7 @@ The Go backend was exposed through a Railway-generated public domain:
 
 `https://perceptive-fulfillment-production-18aa.up.railway.app`
 
-![alt text](<Screenshot 2026-10-22 201309.png>)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/eb7632a5-46f1-4d4c-be6d-e6722e57d41e" />
 
 ### Build and startup
 
@@ -283,7 +298,7 @@ The initial direct Supabase database connection was not reachable from Railway b
 
 The Go Huma `/docs` endpoint was used to verify that the service started successfully and exposed its API routes.
 
-![alt text](<Screenshot 2026-10-22 195826.png>)
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/41ee0bb9-2665-4a29-9325-7fec280765c6" />
 
 # 4. Supabase Database Deployment and Usage
 
@@ -293,7 +308,7 @@ Supabase provides PostgreSQL database services and object storage for the applic
 
 The database stores application data required for the parking-management system, while object storage provides a place to store image-related data where configured.
 
-![alt text](<Screenshot 2026-10-22 201614.png>)
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/40a45a02-c134-4884-b032-84b6b74c82e1" />
 
 ## 4.2 Database
 
@@ -303,41 +318,44 @@ Supabase auto generated a Schema diagram of the relations / tables based on the 
 
 ![alt text](db/supabase/SUPABASE_SCHEMA.svg)
 
-## 4.3 Object Storage
+# 5. Object Storage
 
 The project also used Supabase object storage with S3-compatible configuration.
 
 The parking_log table has an image_folder_path attribute / column which stores the url of the image files uploaded to the Object Storage.
 
-![alt text](<Screenshot 2026-10-22 201701.png>)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/820e1344-5da6-4f74-ab7f-b961f0a5c820" />
 
 The storage uses an S3 bucket configuration, with a structured path for efficient indexing & retrieval of image files if required. 
 
 It follows a hierarchical structure of Date -> License Number with Timestamp of Entry -> Entry & Exit 
 
-![alt text](<Screenshot 2026-10-22 201742.png>)
-
-![alt text](<Screenshot 2026-10-22 201810.png>)
+<img width="1920" height="946" alt="Screenshot 2026-10-22 201742" src="https://github.com/user-attachments/assets/4311436d-ecb1-4ce7-9b75-a06e5958508d" />
 
 
-# 5. Analytics and Observability
+
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/519958cd-8d47-4c7c-a188-cdaca580320a" />
+
+
+# 6. Analytics and Observability
 
 The following dashboard charts and Analytics were observed on the respective platforms after deployment
 
-## 5.1 Vercel
+## 6.1 Vercel
 
-![alt text](image-3.png)
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/ed45bf0b-2ef9-4cd7-9ea6-df24d5b266fb" />
 
-![alt text](image-4.png)
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/88cc2a5a-8407-4c4b-bc01-e86370467625" />
 
 - **CDN Requests**: Shows request volume and HTTP response status codes, indicating traffic patterns and request outcomes.
 
 - **Fast Data Transfer**: Recorded approximately 9 GB outgoing and 4 MB incoming traffic, reflecting substantial outbound data transfer.
 
 
-## 5.2 Railway
+## 6.2 Railway
 
-![alt text](image-5.png)
+<img width="1185" height="812" alt="image" src="https://github.com/user-attachments/assets/f6e93184-5a52-4c05-b363-245b9d0a2d9f" />
 
 - **CPU**: *Python* has larger spikes, reaching roughly 0.27 vCPU;
            *Go's* CPU usage stays comparatively low.
@@ -347,9 +365,9 @@ The following dashboard charts and Analytics were observed on the respective pla
 
 - **Network egress**: Both services show bursts of outbound traffic, with *Go* producing some of the largest spikes due to *Database* and *Object Storage* transfers.
 
-## 5.3 Supabase
+## 6.3 Supabase
 
-![alt text](image-6.png)
+<img width="1340" height="685" alt="image" src="https://github.com/user-attachments/assets/acf1f9bb-0dcf-432d-8afc-1ddde883b8d4" />
 
 - **Max CPU usage**: 6.4% — Low CPU utilization, suggesting database processing demand was modest.
 
@@ -359,7 +377,7 @@ The following dashboard charts and Analytics were observed on the respective pla
 
 - **Memory usage**: 51.4% — Around half of the available memory was in use, relatively stable across the period.
 
-# TEARDOWN
+# 7. TEARDOWN
 
 The deployments and all services were stopped and taken down to prevent incurring extra costs since they all utlizied free tier trials on the respective platforms. 
 
@@ -368,3 +386,5 @@ The deployment experiment demonstrated the practical challenges of integrating m
 Refer to the video walkthrough for a live sample execution: 
 
 [![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/gi900gtaSpA)](https://www.youtube.com/watch?v=gi900gtaSpA)
+
+Refer to the <a href = "README.md"> ReadMe </a> for more details.
