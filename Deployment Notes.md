@@ -308,7 +308,7 @@ Supabase provides PostgreSQL database services and object storage for the applic
 
 The database stores application data required for the parking-management system, while object storage provides a place to store image-related data where configured.
 
-<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/40a45a02-c134-4884-b032-84b6b74c82e1" />
+<img width="1920" height="1080" alt="Screenshot 2026-10-22 201614" src="https://github.com/user-attachments/assets/b5546928-8147-46ec-a08b-efc81afb2980" />
 
 ## 4.2 Database
 
