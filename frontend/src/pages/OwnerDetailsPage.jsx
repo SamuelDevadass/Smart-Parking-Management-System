@@ -26,7 +26,7 @@ export default function OwnerDetailsPage({ data, updateData, goTo })
     try 
     {
       const v = await Api.getVehicle(data.licensePlate);
-      updateData({ ownerId: v.owner_id ?? "", size: v.type ?? "" });
+      updateData({ ownerId: v.owner_id ?? "", size: v.vehicle_type ?? "" });
       setForm({ 
         model: v.model ?? "", colour: v.colour ?? "",
         phone: v.phone ?? "", name: v.name ?? "",

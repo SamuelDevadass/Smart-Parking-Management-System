@@ -1,0 +1,13 @@
+
+{
+  "rewrites": [
+    {
+      "source": "/api/:wing/spots/available/",
+      "destination": "<deployed-railway-url>/api/:wing/spots/available/"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "<deployed-railway-url>/api/:path*"
+    }
+  ]
+}

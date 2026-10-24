@@ -1,11 +1,8 @@
-easyocr==1.7.2
-fastapi==0.140.0
-numpy==2.5.1
-opencv_python==5.0.0.93
+fastapi==0.157.0
+numpy==2.5.4
 opencv_python_headless==5.0.0.93
-Pillow==12.3.0
-psycopg==3.3.4
-pydantic==2.13.4
-python-dotenv==1.2.2
+Pillow==13.0.0
+python-dotenv==1.2.4
 rapidocr_onnxruntime==1.2.3
-ultralytics==8.4.90
+ultralytics_opencv_headless==8.4.182
+uvicorn==0.54.0

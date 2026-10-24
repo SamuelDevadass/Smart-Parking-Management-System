@@ -1,0 +1,157 @@
+/** Grouped By HANDLER->operation-id
+ */
+package services
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"strings"
+)
+
+// const pythonBaseURL = "http://localhost:8001"
+//const detectionBasePath = `C:\Users\Samuel\Desktop\SAM\CODING\PYTHON\LicensePlateRecognition\License-Plate-Detector\backend`
+
+// --------------------------VEHICLE_ENTRY_EXIT-------------------------------------------
+
+// ----------------mark-entry--------------------
+type DetectionStatus struct {
+	Status       string `json:"status"`
+	LicensePlate string `json:"license_plate"`
+	FolderPath   string `json:"folder_path"`
+}
+
+func GetDetectionStatus(python_url string) (*DetectionStatus, error) {
+	url := python_url + "/api/detection/status"
+	log.Println("Calling Python detection service:", url)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	log.Println("Python response status:", resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("python detection service returned %s", resp.Status)
+	}
+
+	var status DetectionStatus
+	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
+		return nil, fmt.Errorf("failed to decode detection response: %w", err)
+	}
+	log.Printf("Detection status received: %+v\n", status)
+	return &status, nil
+}
+
+func GetFolderPath(pythonURL string, licensePlate string,
+	action_subfolder string, blob_folder string) (
+	string, error) {
+	params := url.Values{}
+	params.Set("action_subfolder", action_subfolder)
+	params.Set("blob_folder", blob_folder)
+	endpoint := strings.TrimRight(pythonURL, "/") +
+		"/api/detection/folder/" + url.PathEscape(licensePlate) + "?" + params.Encode()
+
+	log.Println("Calling Python detection service:", endpoint)
+
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Python detection service returned %s", resp.Status)
+	}
+
+	var result string
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("failed to decode detection response: %w", err)
+	}
+
+	log.Printf("Storage folder path received: %s", result)
+	return result, nil
+}
+
+/*
+func CreateFolderPath(ctx context.Context, license_plate string, folder_path string,
+	s3_client *s3.Client, bucket_name string, supabase_url string,
+	detection_base_path string) string {
+	if folder_path == "" || license_plate == "" {
+		log.Println("Error fetching detection status")
+		return ""
+	}
+
+	// Python gives us something like:
+	// scans/2026-10-01_16-56-38
+	// Make it relative to the Python detection service.
+	sourcePath := filepath.Join(detection_base_path, folder_path)
+	date := time.Now().Format("02-01-2006")
+	currentTime := time.Now().Format("15-04-05")
+	vehiclePath := filepath.Join("capture_log", date,
+		license_plate+"_"+currentTime)
+
+	if err := os.MkdirAll(vehiclePath, 0755); err != nil {
+		log.Println("Error creating capture directory:", err)
+		return ""
+	}
+	log.Println("Copying detection files from:", sourcePath)
+	log.Println("Copying detection files to:", vehiclePath)
+	if err := copyDir(sourcePath, vehiclePath); err != nil {
+		log.Println("Error copying capture files:", err)
+		return ""
+	}
+	log.Println("Attempting to upload to Blob...")
+	source_file := filepath.Join(vehiclePath, "Car_Crop_Capture.jpg")
+	object_key := path.Join("capture_log", date,
+		license_plate+"_"+currentTime, "Car_Crop_Capture.jpg")
+	blob_path, err := Upload(ctx, s3_client, bucket_name,
+		supabase_url, source_file, object_key)
+	if err != nil {
+		log.Println("Upload failed\nError: ", err)
+	}
+	source_file = filepath.Join(vehiclePath, "Captured_Image.jpg")
+	object_key = path.Join("capture_log", date,
+		license_plate+"_"+currentTime, "Captured_Image.jpg")
+	blob_path, err = Upload(ctx, s3_client, bucket_name,
+		supabase_url, source_file, object_key)
+	if err != nil {
+		log.Println("Upload failed\nError: ", err)
+	}
+	return blob_path
+}
+
+func copyDir(src string, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		relativePath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		targetPath := filepath.Join(dst, relativePath)
+		if info.IsDir() {
+			return os.MkdirAll(targetPath, info.Mode())
+		}
+		return copyFile(path, targetPath)
+	})
+}
+
+func copyFile(src string, dst string) error {
+	input, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer input.Close()
+	output, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(output, input); err != nil {
+		output.Close()
+		return err
+	}
+	return output.Close()
+}*/

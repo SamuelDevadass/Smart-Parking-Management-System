@@ -1,62 +1,183 @@
-/* API CLIENT
+/*
+  API CLIENT
   ==========
   Every page imports { Api } from here instead
-  of touching fetch() directly
+  of touching fetch() directly.
 
-  Requests go to relative paths like "/api/wings". In dev, vite.config.js
-  proxies "/api/*" to http://localhost:8000 (FastAPI app), so there's
-  no CORS to configure locally. In production you'd either serve both from
-  the same origin, or set an env var here for an absolute backend URL.
+  Requests go to relative paths like "/api/wings".
+  Vite proxies "/api/*" to the Go Huma backend in development.
 */
 
-async function request(path, options = {}) 
-{
-  const res = await fetch(`/api${path}`, 
-  {
-    headers: { "Content-Type": "application/json" },
+
+async function request(path, options = {}) {
+  const url = `/api${path}`;
+  console.log("API REQUEST:", url);
+
+  const res = await fetch(url, {
     ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
-  if (!res.ok) 
-  {
-    const text = await res.text().catch(() => "");
-    throw new Error(`${options.method || "GET"} ${path} failed (${res.status}): ${text}`);
+
+  if (!res.ok) {
+    const message = await res.text();
+    console.error("API ERROR:", res.status, message);
+
+    const error = new Error(message || `Request failed: ${res.status}`);
+    error.status = res.status;
+    throw error;
   }
-  if (res.status === 204) return null;
+
   return res.json();
 }
 
-export const Api = 
-{
-  getWings: () => request("/wings"),
 
-  getCentreForWing: (wing) => request(`/wings/${encodeURIComponent(wing)}/centre`),
+export const Api = {
+  // ============================================================
+  // WINGS
+  // ============================================================
 
-  getSpotAvailability: (wing) => request(`/spots/availability?wing=${encodeURIComponent(wing)}`),
+  getWings: async () => {
+    const data = await request("/wings");
+    return data.wings;
+  },
 
-  startDetection: () => request("/detection/start", { method: "POST" }),
+  getCentreForWing: async (wing) => {
+    const data = await request(
+      `/wings/${encodeURIComponent(wing)}/centre`
+    );
 
-  getDetectionStatus: () => request("/detection/status"),
+    console.log("FULL RESPONSE:", data);
+    console.log("CENTRE_ID:", data?.centre_id);
 
-  stopDetection: () => request("/detection/stop", { method: "POST" }),
 
-  getVehicle: (licensePlate) => request(`/vehicles/${encodeURIComponent(licensePlate)}`),
+    return data.centre_id;
+  },
 
-  saveVehicle: (payload) =>
-    request("/vehicles", { method: "POST", body: JSON.stringify(payload) }),
+  // ============================================================
+  // SPOTS
+  // ============================================================
 
-  getAvailableSpots: (wing, centreId, size) =>
-    request(
-      `/spots?wing=${encodeURIComponent(wing)}&centre_id=${encodeURIComponent(
+  getSpotAvailability: (wing) =>
+    request(`/spots/availability?wing=${encodeURIComponent(wing)}`),
+
+  getAvailableSpots: async (wing, centreId, size) => {
+    const data = await request(
+      `/${encodeURIComponent(wing)}/spots/available/?centre_id=${encodeURIComponent(
         centreId
       )}&size=${encodeURIComponent(size)}`
-    ),
+    );
 
-  markEntry: (payload) => request("/entries", { method: "POST", body: JSON.stringify(payload) }),
+    return data.available_spots_list;
+  },
 
-  getSpot: (licensePlate) => request(`/vehicles/spot/${encodeURIComponent(licensePlate)}`),
+  
+  // ============================================================
+  // DETECTION
+  // ============================================================
+
+  startDetection: async () => {
+    const data = await request("/detection/start", {
+      method: "POST",
+    });
+
+    return data.ok;
+  },
+
+  processDetectionFrame: async (imageBlob) => {
+    const data = await request("/detection/frame", {
+      method: "POST",
+      headers: { "Content-Type": "image/jpeg" },
+      body: imageBlob,
+    });
+
+    return data.ok;
+  },
+
+  getDetectionStatus: async () => {
+    const data = await request("/detection/status");
+
+    return data;
+  },
+
+  stopDetection: async () => {
+    const data = await request("/detection/stop", {
+      method: "POST",
+    });
+
+    return data.ok;
+  },
+
+
+  // ============================================================
+  // VEHICLES
+  // ============================================================
+
+  getVehicle: async (licensePlate) => {
+      const data = await request(
+          `/vehicles/${encodeURIComponent(licensePlate)}`
+      );
+
+      return data.vehicle_details;
+  },
+
+  saveVehicle: async (payload) => {
+    const data = await request("/vehicles", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    return data;
+  },
+
+  // ============================================================
+  // ENTRY
+  // ============================================================
+
+  markEntry: async (payload) => {
+    const data = await request("/entries", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    return data;
+  },
+
+  // ============================================================
+  // VEHICLE SPOT
+  // ============================================================
+
+  getSpot: async (licensePlate) => {
+    const data = await request(
+      `/vehicles/spot/${encodeURIComponent(licensePlate)}`
+    );
+
+    return data;
+  },
+
+  // ============================================================
+  // EXIT
+  // ============================================================
 
   markExit: (licensePlate) =>
-    request("/exits", { method: "POST", body: JSON.stringify({ license_plate: licensePlate }) }),
+  request("/exits", {
+    method: "PUT",
+    body: JSON.stringify({
+      license_plate: licensePlate
+    })
+  }),
 
-  getLatestBill: (licensePlate) => request(`/bills/${encodeURIComponent(licensePlate)}/latest`),
+  // ============================================================
+  // BILL
+  // ============================================================
+
+  getLatestBill: async (licensePlate) => {
+    const data = await request(
+      `/bills/${encodeURIComponent(licensePlate)}/latest`
+    );
+
+    return data;
+  },
 };

@@ -1,0 +1,183 @@
+package models
+
+//See wings for wings models
+import (
+	"time"
+)
+
+// -----------------Spots:get-spot-availability-------------------
+type WingInput struct {
+	Wing string `query:"wing" doc:"Wing name to get its centre id"`
+}
+type GetSpotAvailabilityResponse struct {
+	Body struct {
+		Message               string `json:"message" doc:"Status Message"`
+		TotalSpotsTwoWheeler  int    `json:"total_spots_two_wheeler" doc:"Count of Total Two Wheeler Spots"`
+		FreeSpotsTwoWheeler   int    `json:"free_spots_two_wheeler" doc:"Count of Free Two Wheeler Spots"`
+		TotalSpotsFourWheeler int    `json:"total_spots_four_wheeler" doc:"Count of Total Four Wheeler Spots"`
+		FreeSpotsFourWheeler  int    `json:"free_spots_four_wheeler" doc:"Count of Free Four Wheeler Spots"`
+	}
+}
+
+// -----------------Spots:get-available-spots-------------------
+type GetAvailableSpotsInput struct {
+	Wing      string `path:"wing" doc:"Wing name"`
+	Centre_id int    `query:"centre_id" doc:"Centre-id of wing"`
+	Size      string `query:"size" doc:"Size of Vehicle-Two Wheeler or Four Wheeler"`
+}
+
+type GetAvailableSpotsResponse struct {
+	Body struct {
+		Message            string              `json:"message" doc:"List of all available spots in format floor: <>, spot_number: <>, size: <>"`
+		AvailableSpotsList []map[string]string `json:"available_spots_list" doc:"return list of all available/free spots in current wing"`
+	}
+}
+
+// -----------------VehicleEntryExit:get-vehicle-------------------
+// for Post/Put/Patch methods use GetVehicleInput
+// for Get use GetLicensePlate
+type GetLicensePlate struct {
+	LicensePlate string `path:"license_plate" doc:"License Plate to fetch details of vehicle"`
+}
+
+// helper
+type GetVehicleInput struct {
+	Body struct {
+		LicensePlate string `path:"license_plate" doc:"License Plate to fetch details of vehicle"`
+	}
+}
+
+type VehicleDetails struct {
+	OwnerID string `json:"owner_id" doc:"OwnerID for this license plate"`
+	Model   string `json:"model" doc:"Model of Vehicle for this license plate"`
+	Colour  string `json:"colour" doc:"Colour of vehicle for this license plate"`
+	Type    string `json:"vehicle_type" doc:"Type of Vehicle for this license plate"`
+	Phone   string `json:"phone" doc:"Owner's phone number for this license plate"`
+	Name    string `json:"name" doc:"Owner's name for this license plate"`
+}
+
+type GetVehicleResponse struct {
+	Body struct {
+		Message        string         `json:"message" doc:"User & Vehicle details of this license plate"`
+		VehicleDetails VehicleDetails `json:"vehicle_details"`
+	}
+}
+
+// -----------------VehicleEntryExit:save-vehicle-------------------
+type SaveVehicleInput struct {
+	Body struct {
+		LicensePlate string `json:"license_plate" doc:"License Number"`
+		OwnerID      string `json:"owner_id" doc:"Owner ID"`
+		Model        string `json:"model" doc:"Vehicle model"`
+		Colour       string `json:"colour" doc:"Vehicle colour"`
+		Type         string `json:"type" doc:"Vehicle type"`
+		Phone        string `json:"phone" doc:"Owner phone number"`
+		Name         string `json:"name" doc:"Owner name"`
+	}
+}
+type SaveVehicleResponse struct {
+	Body struct {
+		Message string `json:"message" doc:"Save vehicle with details to database"`
+		Status  bool   `json:"status" doc:"Status of saving details to database"`
+	}
+}
+
+// -----------------VehicleEntryExit:mark-entry-------------------
+type MarkEntryInput struct {
+	Body struct {
+		LicensePlate string `json:"license_plate" doc:"License Number"`
+		CentreID     int    `json:"centre_id" doc:"Centre id currently selected"`
+		Wing         string `json:"wing" doc:"Wing currently selected"`
+		Floor        string `json:"floor" doc:"Floor curently selected"`
+		SpotNumber   string `json:"spot_number" doc:"Spot Number currectly selected"`
+		FolderPath   string `json:"folder_path" doc:"Folder Path to save capture"`
+	}
+}
+
+type MarkEntryResonse struct {
+	Body struct {
+		Message string `json:"message" doc:"Message"`
+		Status  bool   `json:"status" doc:"Status"`
+	}
+}
+
+// -----------------VehicleEntryExit:get-spot-details-------------------
+type GetActiveSessionResponse struct {
+	Body struct {
+		Message    string    `json:"message" doc:"Latest session details"`
+		EntryTime  time.Time `json:"entry_time" doc:"Latest entry time"`
+		CentreID   int       `json:"centre_id" doc:"Centre-id of latest session"`
+		Wing       string    `json:"wing" doc:"Wing of latest session"`
+		Floor      string    `json:"floor" doc:"Floor of latest session"`
+		SpotNumber string    `json:"spot_number" doc:"Spot Number of latest session"`
+	}
+}
+
+type GetSpotDetailsResponse struct {
+	Body struct {
+		Message    string `json:"message" doc:"Latest session details"`
+		SpotNumber string `json:"spot_number" doc:"Spot Number of latest session"`
+		Status     bool   `json:"status" doc:"Status"`
+	}
+}
+
+// -----------------VehicleEntryExit:mark-exit-------------------
+type MarkExitInput struct {
+	Body struct {
+		LicensePlate string `json:"license_plate"`
+	}
+}
+type RecordExitDetails struct {
+	EntryTime  time.Time
+	ExitTime   time.Time
+	Duration   string
+	Amount     float32
+	CentreID   int
+	Wing       string
+	Floor      string
+	SpotNumber string
+}
+type MarkExitResponse struct {
+	Body struct {
+		Message   string    `json:"message" doc:"Message"`
+		EntryTime time.Time `json:"entry_time" doc:"Entry Time"`
+		ExitTime  time.Time `json:"exit_time" doc:"Exit Time"`
+		Duration  string    `json:"duration" doc:"(string)ExitTime - EntryTime"`
+		Amount    float32   `json:"amount" doc:"Final Bill Amount"`
+	}
+}
+
+// -----------------Bills:get-latest-bill-------------------
+// uses LicensePlate as Path
+type GetLatestBillResponse struct {
+	Body struct {
+		Message   string    `json:"message" doc:"Message"`
+		EntryTime time.Time `json:"entry_time" doc:"Entry Time"`
+		ExitTime  time.Time `json:"exit_time" doc:"Exit Time"`
+		Duration  string    `json:"duration" doc:"(Interval)ExitTime - EntryTime"`
+		Amount    float32   `json:"amount" doc:"Final Bill Amount"`
+		OwnerName string    `json:"owner_name" doc:"Owner's name"`
+	}
+}
+
+// -----------------Detection:start-detection-------------------
+type StartDetectionResponse struct {
+	Body struct {
+		Ok bool `json:"ok" doc:"Indicates if detection started successfully"`
+	}
+}
+
+type DetectionStatusResponse struct {
+	Body struct {
+		Status       string `json:"status"`
+		LicensePlate string `json:"license_plate"`
+		FolderPath   string `json:"folder_path"`
+	}
+}
+
+// -----------------Detection:stop-detection-------------------
+type StopDetectionResponse struct {
+	Body struct {
+		Ok bool `json:"ok"`
+	}
+}

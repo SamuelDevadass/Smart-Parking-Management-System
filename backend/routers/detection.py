@@ -1,20 +1,49 @@
-from fastapi import APIRouter, HTTPException
-from services import detection
+
+from fastapi import APIRouter, HTTPException, Request
+from services import detection, folder_path_service
 
 router = APIRouter()
 
+
 @router.post("/api/detection/start")
 def start_detection():
-    detection.start_detection()
-    return {"ok": True}
+    try:
+        return detection.start_detection()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
-@router.get("/api/detection/status")
-def detection_status():
-    return detection.get_status()
+@router.post("/api/detection/frame")
+async def process_detection_frame(request: Request):
+    image_bytes = await request.body()
+
+    try:
+        return detection.process_detection_frame(image_bytes)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/api/detection/stop")
 def stop_detection():
-    detection.stop_detection()
-    return {"ok": True}
+    try:
+        return detection.stop_detection()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.get("/api/detection/status")
+def get_detection_status():
+    return detection.get_status()
+
+# for blob path
+@router.get("/api/detection/folder/{license_plate}")
+def blob_path(license_plate: str, action_subfolder: str, blob_folder: str):
+    return folder_path_service.create_folder_path(license_plate, action_subfolder, blob_folder)

@@ -1,241 +1,156 @@
+"""Instead of creating final folder path somewhere else later
+            Create it here itself so the image is always at the 
+            correct place no matter what"""
+"""Cant do it because we need the final license plate from the frontend"""
 from typing import Optional,Any
-import cv2
-from tkinter import *
-from PIL import Image, ImageTk, ImageFilter, ImageDraw, ImageEnhance
 from datetime import datetime
 import os
-import numpy as np
-from rapidocr_onnxruntime import RapidOCR
-import easyocr
-from ultralytics import YOLO
 import threading
 import time
+import numpy as np
+import cv2
+from PIL import Image, ImageTk, ImageFilter, ImageDraw, ImageEnhance
+from rapidocr_onnxruntime import RapidOCR
+from ultralytics import YOLO
+model = YOLO("yolo26n.pt")
+model.export(format="onnx")  # Creates yolo26n.onnx
+# from tkinter import *
+# from PIL import Image, ImageTk, ImageFilter, ImageDraw, ImageEnhance
+# import easyocr
+
 
 class LicensePlateDetection:
 
     def __init__(self):
         """GLOBAL INITIALIZATIONS"""
         self.rapid_ocr_engine = RapidOCR()
-        self.easy_ocr_reader = easyocr.Reader(['en'], gpu=False)
-        self.yolo_model = YOLO("yolo26n.pt")
+        self.yolo_model = model
+        self.yolo_model.export(format="onnx")
         self.folder_path = None
-        self.camera = cv2.VideoCapture(0)
         self.latest_frame = None
         self.frame_lock = threading.Lock()
 
-
-
-    def cleanup(self, detected_status:bool):
-        """CLEANUP"""
-        if not os.path.exists(self.folder_path):
-            print("FOLDER DOES NOT EXIST . . .")
-            exit()
-        elif detected_status is False:
-            print("NO LICENSE PLATE DETECTED . . .")
-            exit()
-        else:
-            for filename in os.listdir(self.folder_path):
-                filepath = os.path.join(self.folder_path, filename)
-                if filename != "Captured_Image.jpg":
-                    os.remove(filepath)
-
-        self.camera.release()
-        cv2.destroyAllWindows()
-        with self.frame_lock:
-            self.latest_frame = None
-
     def startup_check(self):
-        """IMAGE CAPTURE PIPELINE"""
-        # Get Camera
-        if not self.camera:
-            print("CAMERA not found\nExiting ... ")
-            exit()
-        print("CAMERA available at : ",self.camera)
-
+        print("Camera obtained from frontend...")
         # Get Current Time for logging
         now = datetime.now()
         print("Current Time: ", now)
-
+        #create scans folder if doesnt exist
+        os.makedirs("scans", exist_ok = True)
         # New repository for current cycle
         self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S") # os.mkdir() returns None hence create path as string and then create folder
         os.mkdir(self.folder_path)
 
-    def video_capture_with_yolo(self, stop_event = None):
-        """CAPTURE LIVE FEED"""
-        print("Live video stream active. Press 'q' inside the window to exit.")
+    # RUN YOLO ON DECODED IMAGE RECEIVED FROM FRONTEND
+    def process_frame_using_yolo(self, frame):
+        """Run YOLO on a browser-supplied frame and publish the annotated frame."""
+        processed_frame = frame.copy()
         cropped_car_capture = None
-        while True:
-            if stop_event is not None and stop_event.is_set():
-                print("Stop requested from GUI.")
-                break
+        results = self.yolo_model(processed_frame, verbose=False)
+        for result in results:
+            for box in result.boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                conf = float(box.conf[0])
+                class_id = int(box.cls[0])
+                label = f"{result.names[class_id]} {conf:.2f}"
+                cv2.rectangle(processed_frame, (x1, y1), (x2, y2), (0, 255, 0), 2, )
+                cv2.putText(processed_frame, label, (x1, max(y1 - 10, 0)), 
+                            cv2.FONT_HERSHEY_SIMPLEX,0.5, (0, 255, 0), 2, )
+                if conf > 0.65:
+                    car_x1, car_y1, car_x2, car_y2 = x1, y1, x2, y2
+                    cropped_car_capture = frame[car_y1:car_y2, car_x1:car_x2]
+        with self.frame_lock:
+            self.latest_frame = processed_frame.copy()
+        return processed_frame, cropped_car_capture 
 
-            ret, frame = self.camera.read()
-            if not ret:
-                print("UNABLE TO ACCESS CAMERA")
-                break
-            
-            results = self.yolo_model(frame, stream=True)
-
-            for result in results:
-                boxes = result.boxes
-                for box in boxes:
-                    # Get integer coordinates for drawing
-                    x1, y1, x2, y2 = map(int, box.xyxy[0])
-                    
-                    # Extract confidence and class ID
-                    conf = float(box.conf[0])
-                    class_id = int(box.cls[0])
-                    label = f"{result.names[class_id]} {conf:.2f}"
-
-                    # Draw the bounding box and label directly onto the live frame
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-                    if conf > 0.65:
-                        car_x1, car_y1, car_x2, car_y2 = x1, y1, x2, y2
-                        cropped_car_capture = frame[car_y1:car_y2, car_x1:car_x2]
-
-            #cv2.imshow("YOLO Live Detection Feed", frame)
-            # redirect frames to frontend
-            with self.frame_lock:
-                self.latest_frame = frame.copy()
-            # Check if the user pressed the 'q' key to quit
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        
-        current_path = os.path.join(self.folder_path, "Captured_Image.jpg") 
-        cv2.imwrite(current_path, frame)
-        name_list = ["Captured_Image.jpg"]
-        self.display_image(image_name = "Captured_Image.jpg", title = "LIVE CAPTURED IMAGE")
-        if cropped_car_capture is not None:
-            current_path = os.path.join(self.folder_path, "Car_Crop_Capture.jpg")
-            cv2.imwrite(current_path, cropped_car_capture)
-            self.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
-            name_list.append("Car_Crop_Capture.jpg")
-        
-        cv2.destroyAllWindows()
-        return name_list
-
-    def display_image_tk(self, image_name:str, title:str):
-        """Display captured image"""
-        root=Tk()
-        root.title(f"{title}")
-        image = Image.open(os.path.join(self.folder_path, f"{image_name}"))
-        tk_image = ImageTk.PhotoImage(image)
-        label = Label(root,image=tk_image)
-        label.pack()
-        # Add timer for 3 seconds
-        root.after(3000,root.destroy)
-        root.mainloop() # wont close until user closes window, root.after sets a timer 
-        # Display Car Cropped Capture
-
-    def display_image_cv(self, image_name: str, title: str):
-        """Display captured image using OpenCV instead of a second Tk root."""
-        image_path = os.path.join(self.folder_path, image_name)
-        img = cv2.imread(image_path)
-        if img is None:
-            print(f"Could not load image for display: {image_path}")
-            return
-        cv2.imshow(title, img)
-        cv2.waitKey(3000)          # shows for 3 seconds
-        cv2.destroyWindow(title)
-
-    def display_image(self, image_name: str, title: str):
-            """Display captured image using OpenCV instead of a second Tk root."""
-            image_path = os.path.join(self.folder_path, image_name)
-            img = cv2.imread(image_path)
-            if img is None:
-                print(f"Could not load image for display: {image_path}")
-                return
-            #cv2.imshow(title, img)
-            # forward frames to frontend browser
-            with self.frame_lock:
-                self.latest_frame = img.copy()
-            time.sleep(3)
-            #cv2.waitKey(3000)          # shows for 3 seconds
-            #cv2.destroyWindow(title)
-         
-    def perform_ocr(self, image_name:str, image_array: Optional[Any] = None):
+    def perform_ocr(self, crop_image_name: str, captured_image_name: str, image_array: Optional[Any] = None):
         """OCR PIPELINE"""
-        if os.path.exists(os.path.join(self.folder_path,f"{image_name}")):
-            image = Image.open(os.path.join(self.folder_path, f"{image_name}"))
-        else:
-                image = Image.fromarray(cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB))
-        # PERFORM OCR ON THE CROPPED IMAGE
         detected = False
         text = ""
-        try:
-            results, _ = self.rapid_ocr_engine(image)
-            if not results:
-                raise ValueError("No text in cropped zone")
-            text = " ".join([line[1] for line in results])
-            print(f"RAPIDOCR SUCCESS: {text}")
-            detected = True
-            
-        except Exception:
-            print("RapidOCR high-speed pass failed. Trying Deep Learning EasyOCR on cropped zone...")
-            results = self.easy_ocr_reader.readtext(image)
-            text = " ".join([detection[1] for detection in results])
-            if text:
-                print(f"EASYOCR FALLBACK SUCCESS: {text}")
-                detected = True
-            else:
-                print("NO LICENSE PLATE TEXT DETECTED IN CROPPED ZONE.")
-                detected = False
+        
+        crop_path = os.path.join(self.folder_path, crop_image_name)
+        captured_path = os.path.join(self.folder_path, captured_image_name)
 
-        return text, detected
+        # 1. Try OCR on the cropped zone first
+        try:
+            if os.path.exists(crop_path):
+                ocr_input = crop_path  # RapidOCR accepts file paths directly (str)
+            elif image_array is not None:
+                ocr_input = image_array  # numpy array fallback
+            else:
+                raise ValueError("No valid crop image or array available.")
+
+            ocr_output = self.rapid_ocr_engine(ocr_input)
+            results = ocr_output[0] if ocr_output else None
+
+            if results:
+                text = " ".join([line[1] for line in results])
+                print(f"RAPIDOCR SUCCESS (Crop): {text}")
+                return text, True
+            else:
+                print("No text in cropped zone, trying fallback...")
+                raise ValueError("No text detected in crop")
+
+        except Exception as e:
+            print(f"Crop OCR failed. Trying fallback on captured image...")
+
+        # 2. Fallback: Try OCR on the full captured image
+        try:
+            if os.path.exists(captured_path):
+                ocr_output = self.rapid_ocr_engine(captured_path)
+                results = ocr_output[0] if ocr_output else None
+
+                if results:
+                    text = " ".join([line[1] for line in results])
+                    print(f"RAPIDOCR SUCCESS (Captured): {text}")
+                    return text, True
+            
+            print("No text found in captured image either.")
+        except Exception as e:
+            print(f"Captured OCR fallback error: {e}")
+
+        # 3. If both fail, return default message and False status
+        return "Enter License Number Manually", False
     
     def image_processing_pipeline(self, image_name: str):
         # A. Try Pillow
         conf, crop, visual = self.pillow_thresholding_pipeline(image_name)
-        
         # B. Fallback if needed
         if conf <= 0.5:
             print("Pillow low confidence, falling back to OpenCV...")
             crop, visual = self.opencv_thresholding_pipeline(image_name)
-            
         # C. Standardize Output (Save visual for display, return crop for OCR)
         visual.save(os.path.join(self.folder_path, "Contours.jpg"))
-        self.display_image(image_name="Contours.jpg", title="CONTOURS")
-        
+        #self.display_image(image_name="Contours.jpg", title="CONTOURS")
         return "Contours.jpg", crop
 
     def pillow_thresholding_pipeline(self, image_name: str):
         # 1. Load and Preprocess
         image = Image.open(os.path.join(self.folder_path, image_name)).convert("RGB")
         gray = image.convert('L').filter(ImageFilter.GaussianBlur(0.1))
-        
         # 2. Thresholding
         threshold = 65
         binary_edges = gray.point(lambda p: 255 if p > threshold else 0)
-        
         # 3. Find Contours (Using built-in filter for cleaner edges)
         # Instead of painting every white pixel, we find the boundaries
         edge_map = binary_edges.filter(ImageFilter.FIND_EDGES)
-        
         drawn_image = image.copy()
         draw = ImageDraw.Draw(drawn_image)
-        
         # Get coordinates only for the edge pixels
         binary_np = np.array(edge_map)
         coords = np.argwhere(binary_np > 0)
-        
         confidence_score = 1.0 if len(coords) > 100 else 0.0
-        
         if confidence_score > 0.5:
             # Draw only the edges as lines/points
             for y, x in coords:
                 draw.point((x, y), fill='green')
-            
             # Crop logic remains the same
             y1, x1 = coords.min(axis=0)
             y2, x2 = coords.max(axis=0)
             padding = 5
-            cropped_ocr_input = np.array(binary_edges)[max(0, y1-padding):y2+padding, 
-                                                       max(0, x1-padding):x2+padding]
+            cropped_ocr_input = np.array(binary_edges)[max(0, y1-padding):y2+padding, max(0, x1-padding):x2+padding]
         else:
             cropped_ocr_input = np.array(binary_edges)
-
         return confidence_score, cropped_ocr_input, drawn_image
 
     def opencv_thresholding_pipeline(self, image_name: str):
@@ -243,55 +158,305 @@ class LicensePlateDetection:
         img = cv2.imread(os.path.join(self.folder_path, image_name))
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         _, binary = cv2.threshold(gray, 65, 255, cv2.THRESH_BINARY)
-        
         # 2. Draw on original-style visual
         drawn_image_cv = img.copy()
         contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(drawn_image_cv, contours, -1, (0, 255, 0), 1)
         drawn_image = Image.fromarray(cv2.cvtColor(drawn_image_cv, cv2.COLOR_BGR2RGB))
-        
         # 3. Logic to extract crop
         plate_contour = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(plate_contour)
         padding = 5
-        cropped_ocr_input = binary[max(0, y-padding):y+h+padding, 
-                                   max(0, x-padding):x+w+padding]
-        
+        cropped_ocr_input = binary[max(0, y-padding):y+h+padding, max(0, x-padding):x+w+padding]
         return cropped_ocr_input, drawn_image
+
+# ---------------DEPRECATED FUNCTIONS----------------------------------------------------    
+    # def __init__(self):
+    #     """GLOBAL INITIALIZATIONS"""
+    #     self.rapid_ocr_engine = RapidOCR()
+    #     self.easy_ocr_reader = easyocr.Reader(['en'], gpu=False)
+    #     self.yolo_model = YOLO("yolo26n.pt")
+    #     self.folder_path = None
+    #     self.camera = cv2.VideoCapture(0)
+    #     self.latest_frame = None
+    #     self.frame_lock = threading.Lock()
+    
+    # def startup_check(self):
+    #     """Initialize a scan session without opening a camera."""
+    #     os.makedirs("scans", exist_ok=True)
+    #     now = datetime.now()
+    #     self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S")
+    #     # Avoid a collision if two sessions start within the same second.
+    #     os.makedirs(self.folder_path, exist_ok=False)
+    #     with self.frame_lock:
+    #         self.latest_frame = None
+    #     print(f"Detection session started: {self.folder_path}")
+
+    # def cleanup(self, detected_status:bool):
+    #     """CLEANUP"""
+    #     if not os.path.exists(self.folder_path):
+    #         print("FOLDER DOES NOT EXIST . . .")
+    #         exit()
+    #     elif detected_status is False:
+    #         print("NO LICENSE PLATE DETECTED . . .")
+    #         exit()
+    #     else:
+    #         for filename in os.listdir(self.folder_path):
+    #             filepath = os.path.join(self.folder_path, filename)
+    #             if filename != "Captured_Image.jpg":
+    #                 os.remove(filepath)
+    #     self.camera.release()
+    #     cv2.destroyAllWindows()
+    #     with self.frame_lock:
+    #         self.latest_frame = None
+
+    # def startup_check(self):
+    #     """IMAGE CAPTURE PIPELINE"""
+    #     # Get Camera
+    #     """if not self.camera:
+    #         print("CAMERA not found\nExiting ... ")
+    #         exit()
+    #     print("CAMERA available at : ",self.camera)"""
+    #     print("Camera obtained from frontend...")
+    #     # Get Current Time for logging
+    #     now = datetime.now()
+    #     print("Current Time: ", now)
+    #     #create scans folder if doesnt exist
+    #     os.makedirs("scans", exist_ok = True)
+    #     # New repository for current cycle
+    #     self.folder_path = now.strftime("scans/%Y-%m-%d_%H-%M-%S") # os.mkdir() returns None hence create path as string and then create folder
+    #     os.mkdir(self.folder_path)
+    
+    # # Main Driver to coordiante YOLO and image paths
+    # def http_capture_with_yolo(self, frame, stop_event = None,):
+    #     print("Live video stream active ...")
+    #     cropped_car_capture = None
+    #     if stop_event is not None and stop_event.is_set():
+    #         print("Stop requested from GUI.")
+    #     # YOLO performed by process_frame_using_yolo()
+    #     processed_frame, cropped_car_capture = self.process_frame_using_yolo(frame)
+    #     # Save images
+    #     current_path = os.path.join(self.folder_path, "Captured_Image.jpg") 
+    #     cv2.imwrite(current_path, processed_frame)
+    #     name_list = ["Captured_Image.jpg"]
+    #     self.display_image(image_name = "Captured_Image.jpg", title = "LIVE CAPTURED IMAGE")
+    #     if cropped_car_capture is not None:
+    #         current_path = os.path.join(self.folder_path, "Car_Crop_Capture.jpg")
+    #         cv2.imwrite(current_path, cropped_car_capture)
+    #         self.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
+    #         name_list.append("Car_Crop_Capture.jpg")
+    #     cv2.destroyAllWindows()
+    #     return name_list
+    
+    # def video_capture_with_yolo(self, stop_event = None):
+    #     """CAPTURE LIVE FEED"""
+    #     print("Live video stream active. Press 'q' inside the window to exit.")
+    #     cropped_car_capture = None
+    #     while True:
+    #         if stop_event is not None and stop_event.is_set():
+    #             print("Stop requested from GUI.")
+    #             break
+    #         ret, frame = self.camera.read()
+    #         if not ret:
+    #             print("UNABLE TO ACCESS CAMERA")
+    #             break
+    #         results = self.yolo_model(frame, stream=True)
+    #         for result in results:
+    #             boxes = result.boxes
+    #             for box in boxes:
+    #                 # Get integer coordinates for drawing
+    #                 x1, y1, x2, y2 = map(int, box.xyxy[0])
+    #                 # Extract confidence and class ID
+    #                 conf = float(box.conf[0])
+    #                 class_id = int(box.cls[0])
+    #                 label = f"{result.names[class_id]} {conf:.2f}"
+    #                 # Draw the bounding box and label directly onto the live frame
+    #                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    #                 cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    #                 if conf > 0.65:
+    #                     car_x1, car_y1, car_x2, car_y2 = x1, y1, x2, y2
+    #                     cropped_car_capture = frame[car_y1:car_y2, car_x1:car_x2]
+    #         #cv2.imshow("YOLO Live Detection Feed", frame)
+    #         # redirect frames to frontend
+    #         with self.frame_lock:
+    #             self.latest_frame = frame.copy()
+    #         # Check if the user pressed the 'q' key to quit
+    #         if cv2.waitKey(1) & 0xFF == ord('q'):
+    #             break
+    #     current_path = os.path.join(self.folder_path, "Captured_Image.jpg") 
+    #     cv2.imwrite(current_path, frame)
+    #     name_list = ["Captured_Image.jpg"]
+    #     self.display_image(image_name = "Captured_Image.jpg", title = "LIVE CAPTURED IMAGE")
+    #     if cropped_car_capture is not None:
+    #         current_path = os.path.join(self.folder_path, "Car_Crop_Capture.jpg")
+    #         cv2.imwrite(current_path, cropped_car_capture)
+    #         self.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
+    #         name_list.append("Car_Crop_Capture.jpg")
+    #     cv2.destroyAllWindows()
+    #     return name_list
+
+    # def display_image(self, image_name: str, title: str):
+    #     """Display captured image using OpenCV instead of a second Tk root."""
+    #     image_path = os.path.join(self.folder_path, image_name)
+    #     img = cv2.imread(image_path)
+    #     if img is None:
+    #         print(f"Could not load image for display: {image_path}")
+    #         return
+    #     #cv2.imshow(title, img)
+    #     # forward frames to frontend browser
+    #     with self.frame_lock:
+    #         self.latest_frame = img.copy()
+    #     time.sleep(3)
+    #     #cv2.waitKey(3000)          # shows for 3 seconds
+    #     #cv2.destroyWindow(title)
+
+    # def display_image_tk(self, image_name:str, title:str):
+    #     """Display captured image"""
+    #     root=Tk()
+    #     root.title(f"{title}")
+    #     image = Image.open(os.path.join(self.folder_path, f"{image_name}"))
+    #     tk_image = ImageTk.PhotoImage(image)
+    #     label = Label(root,image=tk_image)
+    #     label.pack()
+    #     # Add timer for 3 seconds
+    #     root.after(3000,root.destroy)
+    #     root.mainloop() # wont close until user closes window, root.after sets a timer 
+    #     # Display Car Cropped Capture
+
+    # def display_image_cv(self, image_name: str, title: str):
+    #     """Display captured image using OpenCV instead of a second Tk root."""
+    #     image_path = os.path.join(self.folder_path, image_name)
+    #     img = cv2.imread(image_path)
+    #     if img is None:
+    #         print(f"Could not load image for display: {image_path}")
+    #         return
+    #     cv2.imshow(title, img)
+    #     cv2.waitKey(3000)          # shows for 3 seconds
+    #     cv2.destroyWindow(title)
+         
+    # def perform_ocr(self, image_name:str, image_array: Optional[Any] = None):
+    #     """OCR PIPELINE"""
+    #     if os.path.exists(os.path.join(self.folder_path,f"{image_name}")):
+    #         image = Image.open(os.path.join(self.folder_path, f"{image_name}"))
+    #     else:
+    #             image = Image.fromarray(cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB))
+    #     # PERFORM OCR ON THE CROPPED IMAGE
+    #     detected = False
+    #     text = ""
+    #     try:
+    #         results, _ = self.rapid_ocr_engine(image)
+    #         if not results:
+    #             raise ValueError("No text in cropped zone")
+    #         text = " ".join([line[1] for line in results])
+    #         print(f"RAPIDOCR SUCCESS: {text}")
+    #         detected = True   
+    #     except Exception:
+    #         print("RapidOCR high-speed pass failed. Trying Deep Learning EasyOCR on cropped zone...")
+    #         results = self.easy_ocr_reader.readtext(image)
+    #         text = " ".join([detection[1] for detection in results])
+    #         if text:
+    #             print(f"EASYOCR FALLBACK SUCCESS: {text}")
+    #             detected = True
+    #         else:
+    #             print("NO LICENSE PLATE TEXT DETECTED IN CROPPED ZONE.")
+    #             detected = False
+    #     return text, detected
+#-----------------------------------------------------------------------------------------------
 
 class Detector:
     def __init__(self):
         self.License_Plate_Detector = LicensePlateDetection()
+        self.active = False
+        self.latest_crop = None
+        self.latest_raw_frame = None
+        self.result = {"status": "idle", "license_plate": "", "folder_path": "",}
+
+    def start_session(self):
+        if self.active:
+            raise RuntimeError("A detection session is already active.")
+        detector = self.License_Plate_Detector
+        detector.startup_check()
+        self.latest_crop = None
+        self.latest_raw_frame = None
+        self.result = {"status": "running","license_plate": "","folder_path": detector.folder_path}
+        self.active = True
+        return {"ok": True, **self.result}
+
+    def decode_frame(self, image_bytes: bytes):
+        if not image_bytes:
+            raise ValueError("Received an empty image body.")
+        encoded_image = np.frombuffer(image_bytes, dtype=np.uint8)
+        frame = cv2.imdecode(encoded_image, cv2.IMREAD_COLOR)
+        if frame is None:
+            raise ValueError("Could not decode the JPEG frame.")
+        return frame
+
+    def process_frame(self, image_bytes: bytes):
+        """Process one frame synchronously using the existing YOLO model."""
+        if not self.active:
+            raise RuntimeError("Start a detection session first.")
+        frame = self.decode_frame(image_bytes)
+        detector = self.License_Plate_Detector
+        processed_frame, crop = detector.process_frame_using_yolo(frame)
+        # Retain the most recent input and qualifying crop for finalization.
+        self.latest_raw_frame = frame
+        if crop is not None and crop.size > 0:
+            self.latest_crop = crop
+        else:
+            self.latest_crop = processed_frame
+        return {"ok": True}
 
     def get_frame_bytes(self):
-            with self.License_Plate_Detector.frame_lock:
-                if self.License_Plate_Detector.latest_frame is None:
-                    return None
-                success, buffer = cv2.imencode(".jpg", self.License_Plate_Detector.latest_frame)
-                if success:
-                    return buffer.tobytes()
+        """Return the latest annotated frame for the video endpoint."""
+        detector = self.License_Plate_Detector
+        with detector.frame_lock:
+            frame = detector.latest_frame
+            if frame is None:
                 return None
+            success, buffer = cv2.imencode(".jpg", frame)
+        return buffer.tobytes() if success else None
 
-    def start(self, stop_event):
-        print("STARTING APPLICATION . . .")
-        self.License_Plate_Detector.startup_check()
-        name_list = self.License_Plate_Detector.video_capture_with_yolo(stop_event)
-        if len(name_list) > 1:
-            image_name = name_list[1]
-            text, detected = self.License_Plate_Detector.perform_ocr(image_name=image_name)
-            if detected:
-                print("YOLO OCR SUCCESS")
-                return text, self.License_Plate_Detector.folder_path
-            image_name = name_list[0]
-            return text,self.License_Plate_Detector.folder_path
-        else:
-            image_name = name_list[0]
+    def stop_session(self):
+        """Save the final capture and run OCR once."""
+        if not self.active:
+            raise RuntimeError("There is no active detection session.")
+        detector = self.License_Plate_Detector
+        folder = detector.folder_path
 
-        final_name, final_result = self.License_Plate_Detector.image_processing_pipeline(image_name = image_name)
-        text , detected = self.License_Plate_Detector.perform_ocr(image_name=final_name, image_array=final_result)
-        #self.License_Plate_Detector.cleanup(detected_status=detected)
-        return text,self.License_Plate_Detector.folder_path
+        try:
+            if self.latest_raw_frame is None:
+                raise RuntimeError("No frames were received.")
+            # Save the final frame with YOLO annotations.
+            final_frame, final_crop = detector.process_frame_using_yolo(self.latest_raw_frame)
+            captured_path = os.path.join(folder, "Captured_Image.jpg")
+            cv2.imwrite(captured_path, final_frame)
+            #detector.display_image(image_name = "Captured_Image.jpg", title = "LIVE CAPTURED IMAGE")
+
+            # Prefer the most recent crop from the processed frames.
+            crop = self.latest_crop if self.latest_crop is not None else final_crop
+            if crop is not None and crop.size > 0:
+                crop_path = os.path.join(folder, "Car_Crop_Capture.jpg")
+                cv2.imwrite(crop_path, crop)
+                #detector.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
+                text, detected = detector.perform_ocr(crop_image_name="Car_Crop_Capture.jpg", captured_image_name = "Captured_Image.jpg")
+            else:
+                # Preserve your existing preprocessing/OCR fallback.
+                final_name, final_result = detector.image_processing_pipeline(image_name="Captured_Image.jpg")
+                #detector.display_image(image_name = "Car_Crop_Capture.jpg", title = "CROPPED CAR CAPTURE")
+                text, detected = detector.perform_ocr(crop_image_name="Car_Crop_Capture.jpg", captured_image_name = "Captured_Image.jpg", image_array=final_result)
+
+            self.result = {"status": "done", 
+                "license_plate": (text or "").strip() if detected else "", "folder_path": folder}
+            return {"ok": True, **self.result}
+        except Exception:
+            self.result["status"] = "error"
+            raise
+        finally:
+            self.active = False
+
+    def get_status(self):
+        return dict(self.result)
 
 if __name__ == "__main__":
     app = Detector()
-    text, app.License_Plate_Detector.folder_path = app.start(stop_event=None)
+    text, app.License_Plate_Detector.folder_path = app.start_session()

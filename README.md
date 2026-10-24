@@ -3,42 +3,69 @@
 
 | Raspberry PI Version | Local Monolith | Modular Local Monolith | Application | Fullstack Web App | Fullstack Web App with Go | Dockerized Web App | 
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/PI-Version) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/LocalMonolith) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/LocalMonolith) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/Application) | [![Current](https://img.shields.io/badge/Current-2e7d32?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/FullstackWebApplication) | [![Upcoming](https://img.shields.io/badge/Upcoming-757575?style=for-the-badge)](#) | [![Upcoming](https://img.shields.io/badge/Upcoming-757575?style=for-the-badge)](#) |
+| [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/PI-Version) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/LocalMonolith) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/LocalMonolith) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/Application) | [![Completed](https://img.shields.io/badge/Completed-a5d6a7?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/FullstackWebApplication) | <br><br>[![Current](https://img.shields.io/badge/Current-2e7d32?style=for-the-badge)](https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/FullstackWebApplication_Go) <br>Distributed Deployment | [![Upcoming](https://img.shields.io/badge/Upcoming-757575?style=for-the-badge)](#) | 
 
-# FullStack Web Application
+# FullStack Web Application with Go
 
-FULLSTACK WEB APPLICATION WITH FULLY FUNCTIONAL DATABASE AND AUTOMATIC PLATE DETECTION
+<li>FullStack Web Application
+<li>Database Normalized upto BCNF  
+<li>Automatic License Plate Detection
+<li>Revised API Gateway  
+<li>Reverse proxy for AI workloads
 
 ### ARCHITECTURE DIAGRAM
 
-<img width="982" height="457" alt="image" src="https://github.com/user-attachments/assets/abb04c1d-6a95-4990-8ac3-594ddbcd18b9" />
+<img width="1037" height="579" alt="ARCHITECTURE DIAGRAMS-DISTRIBUTED DEPLOYMENT drawio (1)" src="https://github.com/user-attachments/assets/226166c9-4cb7-41af-bb7e-1ed1337749c7" />
+
+### DISTRIBUTED DEPLOYMENT
+
+
+| Component | Tech Stack | Platform | Location |
+| :--- | :--- | :--- | :--- |
+| **Frontend** | React | Vercel | Washington, D.C. , USA |
+| **API Layer** | Go Huma | Railway | Northern Virginia, USA |
+| **Backend** | Reverse Proxy (Go to FastAPI) | Railway | Northern Virginia, USA |
+| **Database** | PostgreSQL + PGX | Supabase | Singapore, Asia Pacific |
+| **Capture** | Blob Storage | Supabase Blob with S3 configuration | Singapore, Asia Pacific |      
+
+
+Refer to <a href = "https://github.com/SamuelDevadass/Smart-Parking-Management-System/blob/FullstackWebApplication_Go/Deployment%20Notes.md"> Deployment Notes </a> for a detailed overview of deployment cofigurations and setup instructions.
 
 
 ## Video Walkthrough
 
-[![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/7mYoQlRec2c)](https://youtu.be/7mYoQlRec2c)
+[![Watch the Demo Video](https://markdown-videos-api.jorgenkh.no/youtube/gi900gtaSpA)](https://www.youtube.com/watch?v=gi900gtaSpA)
 
 ## FEATURED UPDATES
 
-GUI     : Tkinter --> React + Vite
+API Layer  : FastApi + Python --> Go Huma-Chi + Reverse Proxy to FastAPI
 
-Backend : Python --> FastApi + Python
+Database   : Python + psycopg --> Go + pgx
+
+Blob       : Supabase Storage
+
 
 -----------------------------------------------------------------------------------------------------
 
-## IMPROVEMENTS OVER APPLICATION
+## IMPROVEMENTS OVER FULLSTACK WEB APPLICATION
 
-i. Detection happens in the same window
+i. Frontend requests for camera access and sends frames to backend over http at regular intervals
 
-ii. Visual depiction of free and occupied spots
 
-iii. Occupied slot is pre selected while marking exit 
+ii. Modified backend to use strictly headless libraries & functions, and avoid GUI based methods 
+
+
+iii. Create a structured path for uploaded capture files to the Blob Storage 
 
 -----------------------------------------------------------------------------------------------------
 
 ### DATABASE
 
-Implemented using PostGreSQL and Psycopg
+Normalized upto BCNF
+
+Deployed to SupaBase, existing data exported to SupaBase DB
+
+Implemented using PostGreSQL and PGX with Go
 
 Designed to support organizations with multiple centres, wings, floors and spots
     
@@ -51,38 +78,65 @@ Supports comprehensive logging for robust performance
 
 ### FRONTEND
 
-Implemented using React 
+Implemented using React + Vite
 
 Designed to support multiple pages dedicated to specific user activities
     
-    Eg: Choose Wing
+        Choose Wing
         Automatic License Number Plate Detection
         Input User Details
         Mark Entry/Exit
         Generate Bill 
 Supports Interactive design for enhanced efficiency
 
-### BACKEND 
+Ensure the vercel.json has the path forwading rules for vercel to correctly redirect the requests
 
-Implemented using FastApi 
+### BACKEND - GO: HUMA-CHI
+
+Implemented using Go Huma with Reverse Proxy to FastAPI
 
 Designed to support secure REST APIs for backend endpoints 
 
-    Eg: /api/wings
+Supports Fixed Request and Response models defined in Go for better security over HTTP transfers
+
+        /api/wings
         /api/spots/
-        /api/detection/
+        /api/detection/ --> Reverse Proxy to FastAPI
         /api/vehicles/
         /api/entries/
         /api/exits/
         /api/bills/
-        /api/video/
-Supports Pydantic schemas for better security over HTTP messages
+        /api/video/     --> Reverse Proxy to FastAPI  
+
+
+### BACKEND - PYTHON: FASTAPI - REVERSE PROXY 
+
+Shifted Camera request and capture module to Frontend
+
+
+Removed all GUI-based function calls & libraries for a headless deployment 
+
+
+Removed EasyOCR and added ONNX file for the YOLO model for a comapct, lightweight deployment
+
+
+Receives image-bytes from frontend over http. 
+
+
+Decodes the image, applies YOLO annotations and resends the image-bytes to frontend ove http
+
+
+Performs OCR on the last captured image and sends results to frontend, while uploading the images to Blob
+
+        /api/detection/ 
+        /api/video/     
+
 
 ### AUTOMATIC LICENSE PLATE DETECTION
 
 Integrated YOLO_Monolith for Automatic License Number Detection
 
-Implemented using YOLO, OpenCV, EasyOCR and Pillow
+Implemented using YOLO-Headless, OpenCV-Headless, RapidOCR and Pillow
 
 Includes automatic fallbacks with custom image enhancement pipeline against confidence score checks
 
@@ -93,7 +147,7 @@ Includes automatic fallbacks with custom image enhancement pipeline against conf
 
 #### Tools and Technologies
 
-PostgreSQL, Psycopg, React, Vite, FastApi, YOLO, EasyOCR, OpenCV, Pillow, RapidOCR
+PostgreSQL, Pgx, Go Huma, YOLO, OpenCV, Pillow, RapidOCR
 
 #### CONFIGURATIONS
 
@@ -105,7 +159,7 @@ i. Folder Structure
     -   README.md
     -   LICENSE
     -   requirements.txt
-    -   requirements.bak
+    -   requirements.all
     +---.vscode/
            settings.json
     +---frontend/
@@ -113,6 +167,7 @@ i. Folder Structure
         -   index.html
         -   package-lock.json
         -   package.json
+        -   vercel.json
         -   vite.config.js
         +---node_modules/
         +---public/
@@ -124,6 +179,7 @@ i. Folder Structure
             -   main.jsx  
             +---api/
                 -   client.js
+                -   client-fastapi.js
             +---components/
                 -   PlateChip.jsx
                     StepBar.jsx       
@@ -135,23 +191,50 @@ i. Folder Structure
                 -   OwnerDetailsPage.jsx
                 -   SelectWingPage.jsx
     +---backend/
-        -   LicensePlateDetector.py
-        -   schemas.py
-        -   yolo26n.pt
         +---routers/
-            -   bills.py
             -   detection.py
-            -   spots.py
-            -   vehicles_entry_exit.py
             -   video.py
-            -   wings.py
         +---scans/
+        +---capture_log/
             -   <timestampted folders of captures>
         +---services/
-            -   billing.py
-            -   db.py
             -   detection.py
+            -   folder_path_service.py
+        -   schemas.py
+        -   yolo26n.pt
+        -   yolo26n.onnx
+        -   requirements.txt
+        -   requirements.all
+        -   LicensePlateDetector.py
+    +---backend_go/
+        +---catpure_log/
+            -   <timestampted folders of captures>
+        +---handlers/   
+            +---wings/
+                -   wings.go
+        -   bills.go
+        -   detection.go
+        -   spots.go
+        -   vehicle_entry_exit.go
+        -   video.go
+        +---models/
+        -   models.go
+        -   wings.go
+        +---repositories/
+        -   db.go
+        +---services/
+        -   billing.go
+        -   detection_status.go
+        -   blob_service_s3.go        
+    -   go.mod
+    -   go.sum
+    -   main.exe
+    -   main.go
     +---db/
+    +---supabase/
+        -   .sql
+        -   SUPABASE_SCHEMA.png
+        -   SUPABASE_SCHEMA.svg
     -   .sql
     -   ER DIAGRAM.jpg
     -   FINAL SCHEMA (BCNF).png       
@@ -159,20 +242,16 @@ i. Folder Structure
 
 ii. Environment Variables
     
-Configure following variables to configure the environment:
+Configure the variables from the env.sample file to setup the environment:
         
-        DB_NAME = 
-        DB_USER = 
-        DB_PW = 
-        DB_HOST = 
-        FRONTEND_URL = 
-        VITE_BACKEND_URL = 
+For local setup: Ensure the fastapi and huma-chi backends run on diffent port numbers to be accessible correctly on localhost
+
 
 iii. Environment Setup
     
 -> Clone the repository/branch using command: 
 
-    git clone -b FullstackWebApplication --single-branch https://github.com/SamuelDevadass/Smart-Parking-Management-System.git
+    git clone -b FullstackWebApplication_Go --single-branch https://github.com/SamuelDevadass/Smart-Parking-Management-System.git
     
 -> Create venv using command:
     
@@ -184,7 +263,12 @@ iii. Environment Setup
 
     pip install -r requirements.txt
 
-  - (Incase required, install other requirements from requirements.bak file)
+  - (Incase required, install other requirements from requirements.all file)
+
+  -> Navigate to backend_go and install requirements using command:
+
+    go mod download
+    go mod tidy
 
 -> Navigate to frontend and install requirements using command:
 
@@ -193,12 +277,20 @@ iii. Environment Setup
 -> Implement the DB using postgresql with the SQL from ./db/.sql
     
    - Refer to diagrams in ./db and issues for detailed Schema and ER diagram
+
+   - Can also refer to the supabase/ subfolder to implement / migrate the database on Supabase
     
 -> Run the application:
 
    - Navigate to the backend and run:
 
-    uvicorn main:app --reload --port 8000
+    uvicorn main:app --reload --port 8001
+
+   - Navigate to the backend_go and run:
+
+    go mod tidy
+    go build -o main.exe main.go
+    go run main.go (or ./main.exe)
 
    - Navigate to the frontend and run:
 
@@ -230,6 +322,6 @@ To add only those libraries actually imported in the files run the command:
 
 If you use this project, please credit https://github.com/SamuelDevadass/Smart-Parking-Management-System
 
-Citation: [Smart Parking Management System / FullstackWebApplication], Samuel Devadass (2026). 
+Citation: [Smart Parking Management System / FullstackWebApplication_Go], Samuel Devadass (2026). 
 
-Available at: [https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/FullstackWebApplication]
+Available at: [https://github.com/SamuelDevadass/Smart-Parking-Management-System/tree/FullstackWebApplication_Go]

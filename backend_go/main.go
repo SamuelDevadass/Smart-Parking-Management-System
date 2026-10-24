@@ -1,0 +1,115 @@
+package main
+
+import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
+
+	/*created a single handlers package
+	all are directly under that package so no need to import individually*/
+	"api.com/handlers"
+	/*explicitly created a package wings under handlers
+	so it must be imported by name*/
+	"api.com/handlers/wings"
+	"api.com/repositories"
+	"api.com/services"
+)
+
+func main() {
+
+	//Load environment variables
+	log.Println("Attempting to load env ...")
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found; using environment variables")
+	}
+	backend_url := os.Getenv("BACKEND_URL")
+	accessKey := os.Getenv("SUPABASE_S3_ACCESS_KEY")
+	secretKey := os.Getenv("SUPABASE_S3_SECRET_KEY")
+	region := os.Getenv("SUPABASE_S3_REGION")
+	endpoint := os.Getenv("SUPABASE_S3_ENDPOINT")
+	bucket_name := os.Getenv("S3_BUCKET")
+	supabase_s3_url := os.Getenv("SUPABASE_S3_URL")
+	python_url := os.Getenv("FASTAPI_URL")
+	detection_base_path := os.Getenv("DETECTION_BASE_PATH")
+	//connection_string := os.Getenv("DB_URL")
+	connection_string := os.Getenv("DB_URL_SUPABASE")
+	frontend_url := os.Getenv("FRONTEND_URL")
+	log.Println("Environment Variables Configured successfully...")
+
+	//Initialize connection to DB
+	log.Println("Initializing DB ...")
+	repositories.Init_DB(context.Background(), connection_string)
+
+	//Initialize S3 client
+	log.Println("Initializing S3 client...")
+	s3_client, err := services.NewSupabaseS3Client(accessKey, secretKey, region, endpoint)
+	if err != nil {
+		log.Fatalf("Failed to initialize S3 client...\nError: %v", err)
+	}
+	log.Printf("S3 Client initialized successfully")
+
+	// 1. CREATE CHI ROUTER
+	r := chi.NewRouter()
+
+	// 2. SET UP MIDDLEWARES
+	//CORS
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", frontend_url) // frontend URL
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			// Catch preflight browser tests instantly
+			if req.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			next.ServeHTTP(w, req)
+		})
+	})
+	// Standard chi utilities (optional but highly recommended)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	// 3. INITIALIZE THE API
+	config := huma.DefaultConfig("Smart Parking Management System API", "2.0.0")
+	api := humachi.New(r, config)
+
+	// 4. REGISTER HANDLERS
+
+	/*explicitly created a package wings under handlers
+	so it must be registered and handled explicitly*/
+	wings.RegisterHandler(api)
+
+	//detection -->grpc
+
+	//include all handlers directly
+	/*each handler must have a unique register function otherwise go wont allow
+	you to have multiple files with same function name*/
+	handlers.RegisterSpotHandler(api)
+
+	//reverse proxy detection router
+	handlers.RegisterDetectionHandler(r, api, python_url)
+	handlers.RegisterVehicleEntryExitHandler(api, s3_client, bucket_name, supabase_s3_url, python_url, detection_base_path)
+	handlers.RegisterBillsHandler(api)
+	handlers.RegisterVideoHandler(r, python_url)
+
+	// 5. LISTEN AND SERVE
+	log.Printf("Server running on http://%s", backend_url)
+	log.Printf("OpenAPI UI available at http://%s/docs", backend_url)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+	err = http.ListenAndServe(":"+port, r)
+	if err != nil {
+		log.Fatalf("HTTP server failed: %v", err)
+	}
+}
